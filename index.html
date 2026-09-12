@@ -398,6 +398,7 @@
   }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* TASKBAR CONTAINER */
   .pagenav {
     display: flex;
     gap: 8px;
@@ -1028,7 +1029,6 @@
     font-size: 13px;
   }
 
-  /* --- RESTORED CARDS: Goals, Policies & Loans Styling --- */
   .goal-card {
     background: var(--surface-2);
     border: 1px solid var(--line);
@@ -1166,7 +1166,7 @@
   #fileInputImport { display: none; }
 
   /* =========================================================
-     RADICAL MOBILE-VIEW ARCHITECTURE (CLEAN FIT & NO OVERFLOW)
+     MOBILE-VIEW ARCHITECTURE (TASKBAR BOTTOM BAR DOCKED)
      ========================================================= */
   body.view-mobile {
     background: #080c0e;
@@ -1283,6 +1283,37 @@
     left: auto;
     max-width: 260px;
   }
+
+  /* Customizer Checkbox Styling */
+  .taskbar-config-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .taskbar-config-item:hover {
+    background: var(--surface-3);
+  }
+  .taskbar-config-item label {
+    margin: 0;
+    font-size: 13px;
+    color: var(--paper);
+    cursor: pointer;
+    text-transform: none;
+    font-weight: 500;
+  }
+  .taskbar-config-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -1330,7 +1361,11 @@
             <span>⚡ Force Live Refresh</span>
             <span style="font-size:11px;color:var(--gold);">Live</span>
           </button>
-          <div class="kebab-header-section">⚙ Settings</div>
+          <div class="kebab-header-section">⚙ Customization &amp; Config</div>
+          <button class="kebab-item" id="kebabCustomizeTaskbarMobile" type="button">
+            <span>🛠 Customize Taskbar</span>
+            <span style="font-size:11px;color:var(--gold);">Edit</span>
+          </button>
           <button class="kebab-item" id="kebabCategoriesMobile" type="button">🏷 Category Addition</button>
           <button class="kebab-item" id="kebabApiKeysMobile" type="button">⚙ API Keys</button>
           <button class="kebab-item" id="kebabPasswordMobile" type="button">Change Password</button>
@@ -1392,7 +1427,11 @@
               <span>⚡ Force Refresh</span>
               <span style="font-size:11px;color:var(--gold);">Live</span>
             </button>
-            <div class="kebab-header-section">⚙ Categories &amp; Config</div>
+            <div class="kebab-header-section">⚙ Taskbar &amp; Categories</div>
+            <button class="kebab-item" id="kebabCustomizeTaskbar" type="button">
+              <span>🛠 Customize Taskbar</span>
+              <span style="font-size:11px;color:var(--gold);">Tabs</span>
+            </button>
             <button class="kebab-item" id="kebabCategories" type="button">
               <span>🏷 Category Addition</span>
               <span style="font-size:11px;color:var(--gold);">Manage</span>
@@ -1403,16 +1442,17 @@
     </div>
   </header>
 
-  <div class="pagenav">
-    <button id="navDashboard" class="active">Dashboard</button>
-    <button id="navGoals">Goals &amp; Savings</button>
-    <button id="navStocks">Stock Holdings</button>
-    <button id="navInsights">Market Insights &amp; Planner</button>
-    <button id="navPolicies">Policies</button>
-    <button id="navLedger">Ledger</button>
-    <button id="navCommitments">Commitments</button>
-    <button id="navCreditCards">Credit Cards</button>
-    <button id="navFixedDeposits">Deposits &amp; Loans</button>
+  <!-- TASKBAR (DESKTOP & MOBILE BOTTOM BAR) -->
+  <div class="pagenav" id="mainTaskbar">
+    <button id="navDashboard" class="active" data-tab="dashboard">Dashboard</button>
+    <button id="navGoals" data-tab="goals">Goals &amp; Savings</button>
+    <button id="navStocks" data-tab="stocks">Stock Holdings</button>
+    <button id="navInsights" data-tab="insights">Market Insights &amp; Planner</button>
+    <button id="navPolicies" data-tab="policies">Policies</button>
+    <button id="navLedger" data-tab="ledger">Ledger</button>
+    <button id="navCommitments" data-tab="commitments">Commitments</button>
+    <button id="navCreditCards" data-tab="creditCards">Credit Cards</button>
+    <button id="navFixedDeposits" data-tab="fixedDeposits">Deposits &amp; Loans</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -1970,6 +2010,20 @@
   </section>
 </div>
 
+<!-- MODAL: Customize Taskbar -->
+<div class="modal-backdrop" id="taskbarModal">
+  <div class="modal-box" style="max-width:480px;">
+    <button class="modal-close" id="btnCloseTaskbarModal">&times;</button>
+    <h4 style="margin:0 0 6px;font-family:'Source Serif 4',serif;font-size:21px;">Customize Taskbar</h4>
+    <p class="modal-sub">Select which tab buttons appear in the taskbar navigation bar for both Desktop and Mobile views.</p>
+    <div id="taskbarConfigList" style="margin-bottom:20px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="primary" id="btnSaveTaskbarConfig" style="flex:1;">Save Taskbar Setup</button>
+      <button class="ghost" id="btnResetTaskbarConfig">Show Dashboard Only</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Category Addition & Management -->
 <div class="modal-backdrop" id="categoriesModal">
   <div class="modal-box" style="max-width:560px;">
@@ -2096,6 +2150,18 @@
     commitment: ["Rent","EMI / Loan","Subscription","Insurance","Utility Bill","Credit Card","Stocks","Mutual Funds","Fixed Deposit","Gold","Real Estate","Crypto","Retirement Fund","Insurance / ULIP","Other","KSFE-Chitty"]
   };
 
+  const ALL_TASKBAR_TABS = [
+    { id: 'dashboard', label: 'Dashboard', btnId: 'navDashboard' },
+    { id: 'goals', label: 'Goals & Savings', btnId: 'navGoals' },
+    { id: 'stocks', label: 'Stock Holdings', btnId: 'navStocks' },
+    { id: 'insights', label: 'Market Insights & Planner', btnId: 'navInsights' },
+    { id: 'policies', label: 'Policies', btnId: 'navPolicies' },
+    { id: 'ledger', label: 'Ledger', btnId: 'navLedger' },
+    { id: 'commitments', label: 'Commitments', btnId: 'navCommitments' },
+    { id: 'creditCards', label: 'Credit Cards', btnId: 'navCreditCards' },
+    { id: 'fixedDeposits', label: 'Deposits & Loans', btnId: 'navFixedDeposits' }
+  ];
+
   let CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
 
   const PALETTE = ["#C6633C","#C9A15A","#6E9BD1","#8FBF7F","#B57EDC","#E0A96D","#5CADAD","#D97C7C","#9AA7B0"];
@@ -2118,6 +2184,7 @@
     tiingoKey: "",
     marketauxKey: "",
     customCategories: null,
+    taskbarTabs: ["dashboard"], // Default initial state: Dashboard only
     avCache: { lastSyncDate: null, stocks: {} },
     rates: { usdInr: 83.50, aedInr: 22.75 },
     transactions: [],
@@ -2178,6 +2245,84 @@
   const savedMode = localStorage.getItem('ledger_view_mode');
   if (savedMode) { setViewMode(savedMode, false); }
   else if (window.innerWidth <= 768) { setViewMode('mobile', false); }
+
+  // --- Taskbar Customizer Controller ---
+  function applyTaskbarVisibility() {
+    const activeTabs = Array.isArray(state.taskbarTabs) && state.taskbarTabs.length > 0
+      ? state.taskbarTabs
+      : ["dashboard"];
+
+    ALL_TASKBAR_TABS.forEach(tab => {
+      const btn = $(tab.btnId);
+      if (btn) {
+        btn.style.display = activeTabs.includes(tab.id) ? 'inline-flex' : 'none';
+      }
+    });
+
+    if (!activeTabs.includes(activePage)) {
+      switchPage('dashboard');
+    }
+  }
+
+  function openTaskbarCustomizer() {
+    if ($('kebabMenu')) $('kebabMenu').classList.remove('show');
+    if ($('kebabMenuMobile')) $('kebabMenuMobile').classList.remove('show');
+
+    const container = $('taskbarConfigList');
+    container.innerHTML = '';
+    const activeTabs = new Set(Array.isArray(state.taskbarTabs) ? state.taskbarTabs : ["dashboard"]);
+
+    ALL_TASKBAR_TABS.forEach(t => {
+      const isChecked = activeTabs.has(t.id);
+      const isDashboard = t.id === 'dashboard';
+      const row = document.createElement('div');
+      row.className = 'taskbar-config-item';
+      row.innerHTML = `
+        <label for="tb_chk_${t.id}">${escapeHtml(t.label)}</label>
+        <input type="checkbox" id="tb_chk_${t.id}" data-tabid="${t.id}" ${isChecked ? 'checked' : ''} ${isDashboard ? 'disabled' : ''}>
+      `;
+      row.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'INPUT' && !isDashboard) {
+          const chk = row.querySelector('input');
+          chk.checked = !chk.checked;
+        }
+      });
+      container.appendChild(row);
+    });
+
+    $('taskbarModal').classList.add('show');
+  }
+
+  $('kebabCustomizeTaskbar').addEventListener('click', openTaskbarCustomizer);
+  $('kebabCustomizeTaskbarMobile').addEventListener('click', openTaskbarCustomizer);
+  $('btnCloseTaskbarModal').addEventListener('click', () => $('taskbarModal').classList.remove('show'));
+  $('taskbarModal').addEventListener('click', (e) => {
+    if (e.target.id === 'taskbarModal') $('taskbarModal').classList.remove('show');
+  });
+
+  $('btnSaveTaskbarConfig').addEventListener('click', async () => {
+    const selected = ['dashboard'];
+    document.querySelectorAll('#taskbarConfigList input[data-tabid]').forEach(input => {
+      if (input.checked && input.dataset.tabid !== 'dashboard') {
+        selected.push(input.dataset.tabid);
+      }
+    });
+    state.taskbarTabs = selected;
+    applyTaskbarVisibility();
+    markDirty();
+    if (fileHandle) await writeToHandle();
+    $('taskbarModal').classList.remove('show');
+    toast('Taskbar customization saved.');
+  });
+
+  $('btnResetTaskbarConfig').addEventListener('click', async () => {
+    state.taskbarTabs = ['dashboard'];
+    applyTaskbarVisibility();
+    markDirty();
+    if (fileHandle) await writeToHandle();
+    $('taskbarModal').classList.remove('show');
+    toast('Taskbar reset: showing Dashboard only.');
+  });
 
   // --- Kebab (3-Dot) Menu Controller ---
   function bindKebab(btn, menu) {
@@ -3338,6 +3483,7 @@
       tiingoKey: "",
       marketauxKey: "",
       customCategories: null,
+      taskbarTabs: ["dashboard"],
       avCache: { lastSyncDate: null, stocks: {} },
       rates: { usdInr: 83.50, aedInr: 22.75 },
       transactions: [],
@@ -3356,6 +3502,12 @@
     if (typeof data.marketauxKey === 'string') s.marketauxKey = data.marketauxKey;
     if (data.avCache && typeof data.avCache === 'object') s.avCache = data.avCache;
     if (data.rates && typeof data.rates.usdInr === 'number') s.rates = data.rates;
+
+    if (Array.isArray(data.taskbarTabs) && data.taskbarTabs.length > 0) {
+      s.taskbarTabs = Array.from(new Set(['dashboard', ...data.taskbarTabs]));
+    } else {
+      s.taskbarTabs = ["dashboard"];
+    }
 
     if (data.customCategories && typeof data.customCategories === 'object') {
       s.customCategories = data.customCategories;
@@ -3496,6 +3648,7 @@
     $('polDueDate').value = todayISO();
     setType('expense');
     setCType('expense');
+    applyTaskbarVisibility();
     switchPage('dashboard');
     renderAll();
     updateStatusPills();
@@ -3591,7 +3744,7 @@
       if (success) {
         fileHandle = null;
         updateConnLabel();
-        if ($('app').style.display === 'none') enterApp(); else renderAll();
+        if ($('app').style.display === 'none') enterApp(); else { applyTaskbarVisibility(); renderAll(); }
         toast('Data imported & decrypted successfully.');
       }
     }catch(err){ toast('File load failed.'); }
@@ -4272,7 +4425,6 @@
     }
   });
 
-  // Closes when clicking outside the history window
   $('historyModal').addEventListener('click', (e) => {
     if (e.target.id === 'historyModal') $('historyModal').classList.remove('show');
   });
