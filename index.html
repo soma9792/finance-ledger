@@ -1797,7 +1797,7 @@
           <label>Note (optional)</label>
           <input type="text" id="fNote" placeholder="e.g. Borrowed from friend / grocery bill">
           <div style="display:flex;gap:8px;margin-top:20px;">
-            <button class="primary" id="btnAdd entry" style="flex:1;">Add entry</button>
+            <button class="primary" id="btnAddEntry" style="flex:1;">Add entry</button>
             <button id="btnCancelEditTx" style="display:none;">Cancel</button>
           </div>
         </div>
@@ -2159,8 +2159,14 @@
     if (m === 'DFM') return (Math.round((n||0)*1000)/1000).toFixed(3);
     return (Math.round((n||0)*100)/100).toFixed(2);
   };
-  const todayISO = () => new Date().toISOString().slice(0,10);
-  const monthISO = () => new Date().toISOString().slice(0,7);
+  const todayISO = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  };
+  const monthISO = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  };
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -2329,7 +2335,6 @@
       const opening = state.openingBalance || 0;
       const unutilizedBalance = opening + grossIncome - totalExpense - totalInvest - totalGoalDeposits;
 
-      // Ascii Visual Diagram Bar Builder
       const maxVal = Math.max(grossIncome, totalExpense, totalInvest, 1);
       const makeBar = val => {
         const bars = Math.round((val / maxVal) * 25);
@@ -2604,19 +2609,36 @@
   });
 
   // --- Helpers & Live Network ---
-  async function fetchWithTimeout(url, timeoutMs = 6000) {
+  async function fetchWithTimeout(url, timeoutMs = 6000, bypassCache = false) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const res = await fetch(url, { signal: controller.signal });
+      let finalUrl = url;
+      let fetchOpts = { signal: controller.signal };
+
+      if (bypassCache) {
+        const separator = finalUrl.includes('?') ? '&' : '?';
+        finalUrl = `${finalUrl}${separator}_ts=${Date.now()}`;
+        fetchOpts.cache = 'no-store';
+        fetchOpts.headers = {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        };
+      }
+
+      const res = await fetch(finalUrl, fetchOpts);
       clearTimeout(id);
       return res;
     } catch (e) { clearTimeout(id); throw e; }
   }
 
-  async function fetchLiveCurrencyRates() {
+  async function fetchLiveCurrencyRates(bypassCache = false) {
     try {
-      const res = await fetchWithTimeout('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json', 5000);
+      const res = await fetchWithTimeout(
+        'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',
+        5000,
+        bypassCache
+      );
       if (res.ok) {
         const d = await res.json();
         if (d?.usd?.inr) {
@@ -2650,15 +2672,30 @@
   }
 
   // --- Stock Intelligence Logic ---
-  async function fetchFinnhubRecommendation(symbol, market) {
+  async function fetchFinnhubRecommendation(symbol, market, bypassCache = false) {
     if (!state.finnhubKey || state.finnhubKey.trim().length < 4) {
-      return { signal: 'NO KEY', score: 0, note: 'Configure Finnhub API key in Settings' };
+      return { signal: 'NO KEY', score: 0, cmp: null, note: 'Configure Finnhub API key in Settings' };
     }
     try {
       const ticker = getMarketResolvedTicker(symbol, market);
+      
+      let liveCmp = null;
+      try {
+        const qRes = await fetchWithTimeout(
+          `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${encodeURIComponent(state.finnhubKey)}`,
+          4500,
+          bypassCache
+        );
+        if (qRes.ok) {
+          const qData = await qRes.json();
+          if (typeof qData?.c === 'number' && qData.c > 0) liveCmp = qData.c;
+        }
+      } catch(e) {}
+
       const res = await fetchWithTimeout(
         `https://finnhub.io/api/v1/stock/recommendation?symbol=${encodeURIComponent(ticker)}&token=${encodeURIComponent(state.finnhubKey)}`,
-        4500
+        4500,
+        bypassCache
       );
       if (res.ok) {
         const data = await res.json();
@@ -2673,14 +2710,15 @@
           else if (sells > buys && sells >= hold) { signal = 'SELL'; score = -2; }
           else { signal = 'HOLD'; score = 0.5; }
 
-          return { signal, score, note: `Wall St: ${buys} Buy, ${hold} Hold, ${sells} Sell` };
+          return { signal, score, cmp: liveCmp, note: `Wall St: ${buys} Buy, ${hold} Hold, ${sells} Sell` };
         }
       }
+      return { signal: 'UNAVAILABLE', score: 0, cmp: liveCmp, note: 'No consensus returned' };
     } catch(e){}
-    return { signal: 'UNAVAILABLE', score: 0, note: 'No consensus returned' };
+    return { signal: 'UNAVAILABLE', score: 0, cmp: null, note: 'Network error' };
   }
 
-  async function fetchAlphaVantageRecommendation(symbol, market) {
+  async function fetchAlphaVantageRecommendation(symbol, market, bypassCache = false) {
     if (!state.alphaVantageKey || state.alphaVantageKey.trim().length < 4) {
       return { signal: 'NO KEY', score: 0, dma20: null, dma50: null, note: 'Configure Alpha Vantage key' };
     }
@@ -2688,7 +2726,8 @@
       const ticker = getMarketResolvedTicker(symbol, market);
       const res50 = await fetchWithTimeout(
         `https://www.alphavantage.co/query?function=SMA&symbol=${encodeURIComponent(ticker)}&interval=daily&time_period=50&series_type=close&apikey=${encodeURIComponent(state.alphaVantageKey)}`,
-        5000
+        5000,
+        bypassCache
       );
       if (res50.ok) {
         const d50 = await res50.json();
@@ -2698,8 +2737,12 @@
           await sleep(1000);
           const res20 = await fetchWithTimeout(
             `https://www.alphavantage.co/query?function=SMA&symbol=${encodeURIComponent(ticker)}&interval=daily&time_period=20&series_type=close&apikey=${encodeURIComponent(state.alphaVantageKey)}`,
-            5000
+            5000,
+            bypassCache
           );
+          if (!res20.ok) {
+            return { signal: 'UNAVAILABLE', score: 0, dma20: null, dma50: v50 || null, note: '20 DMA request failed' };
+          }
           const d20 = await res20.json();
           const s20 = d20?.["Technical Analysis: SMA"];
           const v20 = parseFloat(s20?.[Object.keys(s20 || {})[0]]?.["SMA"]);
@@ -2717,7 +2760,7 @@
     return { signal: 'UNAVAILABLE', score: 0, dma20: null, dma50: null, note: 'Rate limit or unavailable' };
   }
 
-  async function fetchTiingoDailyAnalysis(symbol, market) {
+  async function fetchTiingoDailyAnalysis(symbol, market, bypassCache = false) {
     if (!state.tiingoKey || state.tiingoKey.trim().length < 4) {
       return { signal: 'NO KEY', score: 0, dma20: null, dma50: null, cmp: null, note: 'Configure Tiingo API key' };
     }
@@ -2728,7 +2771,8 @@
       const startStr = d.toISOString().slice(0, 10);
       const res = await fetchWithTimeout(
         `https://api.tiingo.com/tiingo/daily/${encodeURIComponent(ticker)}/prices?startDate=${startStr}&token=${encodeURIComponent(state.tiingoKey)}`,
-        5000
+        5000,
+        bypassCache
       );
       if (res.ok) {
         const data = await res.json();
@@ -2752,7 +2796,7 @@
     return { signal: 'UNAVAILABLE', score: 0, dma20: null, dma50: null, cmp: null, note: 'Tiingo data unavailable' };
   }
 
-  async function fetchMarketauxSentiment(symbol, market, name) {
+  async function fetchMarketauxSentiment(symbol, market, name, bypassCache = false) {
     if (!state.marketauxKey || state.marketauxKey.trim().length < 4) {
       return { signal: 'NO KEY', score: 0, sentimentScore: 0, headlines: [], note: 'Configure Marketaux API key' };
     }
@@ -2760,7 +2804,8 @@
       const ticker = getMarketResolvedTicker(symbol, market);
       const res = await fetchWithTimeout(
         `https://api.marketaux.com/v1/news/all?symbols=${encodeURIComponent(ticker)}&filter_entities=true&language=en&api_token=${encodeURIComponent(state.marketauxKey)}`,
-        5500
+        5500,
+        bypassCache
       );
       if (res.ok) {
         const data = await res.json();
@@ -2794,31 +2839,123 @@
     return { signal: 'UNAVAILABLE', score: 0, sentimentScore: 0, headlines: [], note: 'Marketaux news unavailable' };
   }
 
-  async function fetchFreeWebEngineRecommendation(symbol, market, name) {
+  // Multi-source Free Web Engine with Stooq & Proxy Fallbacks
+  async function fetchFreeWebEngineRecommendation(symbol, market, name, bypassCache = false) {
+    const rawSym = symbol.trim().toUpperCase();
     const ticker = getMarketResolvedTicker(symbol, market);
-    const target = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=6mo`;
     let techSignal = 'HOLD', score = 0.5;
     let closes = [], dma20 = null, dma50 = null;
+    let cmp = null;
 
-    try {
-      const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`, 5500);
-      if (res.ok) {
-        const outer = await res.json();
-        const d = JSON.parse(outer.contents);
-        closes = (d?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || []).filter(v => typeof v === 'number');
-        if (closes.length >= 20) dma20 = computeSMA(closes, 20);
-        if (closes.length >= 50) {
-          dma50 = computeSMA(closes, 50);
-          const last = closes[closes.length - 1];
-          if (last > dma50 && dma20 > dma50) { techSignal = 'BUY'; score = 1.5; }
-          else if (last < dma50 && dma20 < dma50) { techSignal = 'SELL'; score = -1.5; }
-        }
+    // Helper: Parse Stooq daily CSV
+    async function tryFetchStooq(s, m) {
+      let stooqTicker = s.toLowerCase();
+      if (m === 'US') {
+        stooqTicker = `${stooqTicker}.us`;
+      } else if (m === 'IN') {
+        stooqTicker = `${stooqTicker.replace(/\.(NS|BO)$/i, '')}.in`;
+      } else if (m === 'DFM') {
+        // Stooq does not carry DFM/ADX listings - skip the request entirely
+        // rather than firing a guaranteed-to-fail lookup.
+        return null;
       }
-    } catch(e){}
+      try {
+        const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(stooqTicker)}&i=d`;
+        const res = await fetchWithTimeout(url, 4500, bypassCache);
+        if (res.ok) {
+          const csvText = await res.text();
+          const lines = csvText.trim().split('\n').slice(1);
+          const parsedCloses = [];
+          for (const line of lines) {
+            const parts = line.split(',');
+            const closeVal = parseFloat(parts[4]);
+            if (!isNaN(closeVal) && closeVal > 0) {
+              parsedCloses.push(closeVal);
+            }
+          }
+          if (parsedCloses.length > 0) {
+            return {
+              cmp: parsedCloses[parsedCloses.length - 1],
+              closes: parsedCloses
+            };
+          }
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    // Helper: Yahoo chart query with multiple CORS proxies
+    async function tryFetchYahooChart(tick) {
+      const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(tick)}?interval=1d&range=6mo`;
+      const proxyUrls = [
+        `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`,
+        `https://corsproxy.io/?url=${encodeURIComponent(target)}`
+      ];
+
+      for (const pUrl of proxyUrls) {
+        try {
+          const res = await fetchWithTimeout(pUrl, 5000, bypassCache);
+          if (!res.ok) continue;
+
+          let jsonContent = null;
+          if (pUrl.includes('allorigins.win')) {
+            const outer = await res.json();
+            jsonContent = typeof outer.contents === 'string' ? JSON.parse(outer.contents) : outer.contents;
+          } else {
+            jsonContent = await res.json();
+          }
+
+          const result = jsonContent?.chart?.result?.[0];
+          if (!result) continue;
+
+          const metaPrice = result?.meta?.regularMarketPrice;
+          const quoteCloses = (result?.indicators?.quote?.[0]?.close || []).filter(v => typeof v === 'number' && v > 0);
+          const currentPrice = metaPrice || (quoteCloses.length ? quoteCloses[quoteCloses.length - 1] : null);
+
+          if (currentPrice) {
+            return { cmp: currentPrice, closes: quoteCloses };
+          }
+        } catch (err) {}
+      }
+      return null;
+    }
+
+    // Tier 1: Try Yahoo Chart via proxies
+    const yahooData = await tryFetchYahooChart(ticker);
+    if (yahooData) {
+      cmp = yahooData.cmp;
+      closes = yahooData.closes;
+    }
+
+    // Tier 2: Stooq fallback if Yahoo proxy blocked or empty
+    if (!cmp || closes.length === 0) {
+      const stooqData = await tryFetchStooq(rawSym, market);
+      if (stooqData) {
+        cmp = stooqData.cmp;
+        if (!closes.length) closes = stooqData.closes;
+      }
+    }
+
+    // Technical calculations (20 & 50 DMA)
+    if (closes.length >= 20) dma20 = computeSMA(closes, 20);
+    if (closes.length >= 50) {
+      dma50 = computeSMA(closes, 50);
+      const last = cmp || closes[closes.length - 1];
+      if (last > dma50 && dma20 > dma50) { 
+        techSignal = 'BUY'; 
+        score = 1.5; 
+      } else if (last < dma50 && dma20 < dma50) { 
+        techSignal = 'SELL'; 
+        score = -1.5; 
+      }
+    }
 
     return {
-      signal: techSignal, score, dma20, dma50,
-      cmp: closes.length ? closes[closes.length - 1] : null,
+      signal: techSignal,
+      score,
+      dma20,
+      dma50,
+      cmp,
       note: `Free model: ${techSignal}`
     };
   }
@@ -2893,8 +3030,16 @@
     const today = todayISO();
     updateStatusPills();
 
+    // In normal opening, check if today's cache is present and reuse it
     if (!force && state.avCache?.lastSyncDate === today && Object.keys(state.avCache.stocks || {}).length > 0) {
+      state.stocks.forEach(stock => {
+        const sym = stock.symbol.trim().toUpperCase();
+        if (state.avCache.stocks[sym]?.cmp) {
+          stock.cmp = state.avCache.stocks[sym].cmp;
+        }
+      });
       $('insightsStatus').textContent = `✓ Using today's cached intelligence (${today}). Zero API calls consumed.`;
+      renderStocks();
       renderInsights();
       return;
     }
@@ -2904,36 +3049,81 @@
       return;
     }
 
-    $('insightsStatus').textContent = 'Running multi-platform intelligence sync...';
-    toast('Running multi-platform analysis across Finnhub, Alpha Vantage, Tiingo & Marketaux...');
+    $('insightsStatus').textContent = force ? 'Manual bypass: Fetching real-time CMP & indicators...' : 'Running daily intelligence sync...';
+    toast(force ? 'Manual refresh: Fetching real-time CMP bypassing all caches...' : 'Running scheduled multi-platform analysis...');
+    
     if (!state.avCache) state.avCache = { lastSyncDate: null, stocks: {} };
     if (!state.avCache.stocks) state.avCache.stocks = {};
 
     let done = 0;
     for (const stock of state.stocks) {
       const sym = stock.symbol.trim().toUpperCase();
-      $('insightsStatus').textContent = `Analyzing ${sym} across platforms (${done + 1}/${state.stocks.length})...`;
 
-      const [finnhubRec, avRec, tiingoRec, mxRec, freeRec] = await Promise.all([
-        fetchFinnhubRecommendation(sym, stock.market),
-        fetchAlphaVantageRecommendation(sym, stock.market),
-        fetchTiingoDailyAnalysis(sym, stock.market),
-        fetchMarketauxSentiment(sym, stock.market, stock.name),
-        fetchFreeWebEngineRecommendation(sym, stock.market, stock.name)
-      ]);
+      // --- Cascading fetch: try the free, unlimited source first. As soon as a
+      // source returns a usable live price, we stop and skip the remaining
+      // keyed APIs for this stock entirely. This is what was quietly burning
+      // through Tiingo/Finnhub/Alpha Vantage's daily quotas on every sync and
+      // causing CMP updates to fail once a limit was hit — each source below
+      // is only called if every source before it came back without a price.
+      const skippedNote = 'Skipped — live price already secured from an earlier source';
+      let finnhubRec = { signal: 'NOT RUN', score: 0, cmp: null, note: skippedNote };
+      let avRec = { signal: 'NOT RUN', score: 0, dma20: null, dma50: null, note: skippedNote };
+      let tiingoRec = { signal: 'NOT RUN', score: 0, dma20: null, dma50: null, cmp: null, note: skippedNote };
+      let mxRec = { signal: 'NOT RUN', score: 0, sentimentScore: 0, headlines: [], note: skippedNote };
+      let freeRec;
+      let cmp = null, dma20 = null, dma50 = null;
 
-      const bestPrice = tiingoRec.cmp || freeRec.cmp || stock.cmp;
-      if (bestPrice) stock.cmp = bestPrice;
+      // Tier 1: Free Web Engine (Yahoo/Stooq via proxy) — no API key, no quota to burn.
+      $('insightsStatus').textContent = `Fetching live CMP for ${sym} via Free Engine (${done + 1}/${state.stocks.length})...`;
+      freeRec = await fetchFreeWebEngineRecommendation(sym, stock.market, stock.name, force);
+      if (freeRec?.cmp) { cmp = freeRec.cmp; dma20 = freeRec.dma20; dma50 = freeRec.dma50; }
 
-      const dma20 = tiingoRec.dma20 || avRec.dma20 || freeRec.dma20 || null;
-      const dma50 = tiingoRec.dma50 || avRec.dma50 || freeRec.dma50 || null;
+      // Tier 2: Tiingo — only if the free engine didn't return a price.
+      if (!cmp) {
+        $('insightsStatus').textContent = `Free engine had no price for ${sym}, trying Tiingo (${done + 1}/${state.stocks.length})...`;
+        tiingoRec = await fetchTiingoDailyAnalysis(sym, stock.market, force);
+        if (tiingoRec?.cmp) { cmp = tiingoRec.cmp; dma20 = dma20 || tiingoRec.dma20; dma50 = dma50 || tiingoRec.dma50; }
+      }
+
+      // Tier 3: Finnhub — only if still no price.
+      if (!cmp) {
+        $('insightsStatus').textContent = `Still no live price for ${sym}, trying Finnhub (${done + 1}/${state.stocks.length})...`;
+        finnhubRec = await fetchFinnhubRecommendation(sym, stock.market, force);
+        if (finnhubRec?.cmp) cmp = finnhubRec.cmp;
+      }
+
+      // Tier 4: Alpha Vantage — last resort. It never returns a price anyway
+      // (DMA only), so it's only worth calling if we still lack DMA data.
+      if (!cmp) {
+        $('insightsStatus').textContent = `Still no live price for ${sym}, trying Alpha Vantage (${done + 1}/${state.stocks.length})...`;
+        avRec = await fetchAlphaVantageRecommendation(sym, stock.market, force);
+        dma20 = dma20 || avRec?.dma20 || null;
+        dma50 = dma50 || avRec?.dma50 || null;
+      }
+
+      // Tier 5: Marketaux sentiment — only run when every price source above failed.
+      if (!cmp) {
+        mxRec = await fetchMarketauxSentiment(sym, stock.market, stock.name, force);
+      }
+
+      if (cmp && !isNaN(cmp)) {
+        stock.cmp = Number(cmp);
+      }
 
       const sources = { finnhub: finnhubRec, alphaVantage: avRec, tiingo: tiingoRec, marketaux: mxRec, freeWeb: freeRec };
-      const analysis = computeStockBuyScore(bestPrice, dma20, dma50, sources);
+      const analysis = computeStockBuyScore(stock.cmp, dma20, dma50, sources);
 
-      state.avCache.stocks[sym] = { date: today, cmp: bestPrice, dma20, dma50, analysis, sources };
+      state.avCache.stocks[sym] = { 
+        date: today, 
+        cmp: stock.cmp, 
+        dma20, 
+        dma50, 
+        analysis, 
+        sources, 
+        lastFetchedAt: new Date().toISOString() 
+      };
       done++;
-      await sleep(600);
+      await sleep(400);
     }
 
     state.avCache.lastSyncDate = today;
@@ -2942,8 +3132,8 @@
     renderStocks();
     renderInsights();
     updateStatusPills();
-    toast('Daily analysis synced and saved to encrypted file.');
-    $('insightsStatus').textContent = `✓ Full analysis complete for ${today}. Memory cache active.`;
+    toast('Real-time CMP updated and saved to encrypted storage.');
+    $('insightsStatus').textContent = `✓ Full analysis complete for ${today}. Cache active.`;
   }
 
   function computePlannerAllocations(stocksInMarket, capital) {
@@ -3164,23 +3354,33 @@
           const sym = s.symbol.trim().toUpperCase();
 
           const [finnhubRec, avRec, tiingoRec, mxRec, freeRec] = await Promise.all([
-            fetchFinnhubRecommendation(sym, s.market),
-            fetchAlphaVantageRecommendation(sym, s.market),
-            fetchTiingoDailyAnalysis(sym, s.market),
-            fetchMarketauxSentiment(sym, s.market, s.name),
-            fetchFreeWebEngineRecommendation(sym, s.market, s.name)
+            fetchFinnhubRecommendation(sym, s.market, true),
+            fetchAlphaVantageRecommendation(sym, s.market, true),
+            fetchTiingoDailyAnalysis(sym, s.market, true),
+            fetchMarketauxSentiment(sym, s.market, s.name, true),
+            fetchFreeWebEngineRecommendation(sym, s.market, s.name, true)
           ]);
 
-          const bestPrice = tiingoRec.cmp || freeRec.cmp || s.cmp;
-          if (bestPrice) s.cmp = bestPrice;
+          const bestPrice = finnhubRec?.cmp || freeRec?.cmp || tiingoRec?.cmp || s.cmp;
+          if (bestPrice && !isNaN(bestPrice)) {
+            s.cmp = Number(bestPrice);
+          }
 
           const dma20 = tiingoRec.dma20 || avRec.dma20 || freeRec.dma20 || null;
           const dma50 = tiingoRec.dma50 || avRec.dma50 || freeRec.dma50 || null;
 
           const sources = { finnhub: finnhubRec, alphaVantage: avRec, tiingo: tiingoRec, marketaux: mxRec, freeWeb: freeRec };
-          const analysis = computeStockBuyScore(bestPrice, dma20, dma50, sources);
+          const analysis = computeStockBuyScore(s.cmp, dma20, dma50, sources);
 
-          state.avCache.stocks[sym] = { date: todayISO(), cmp: bestPrice, dma20, dma50, analysis, sources };
+          state.avCache.stocks[sym] = { 
+            date: todayISO(), 
+            cmp: s.cmp, 
+            dma20, 
+            dma50, 
+            analysis, 
+            sources,
+            lastFetchedAt: new Date().toISOString()
+          };
           markDirty();
           if (fileHandle) await writeToHandle();
           renderStocks();
@@ -3202,11 +3402,11 @@
     if (btnHeader) btnHeader.disabled = true;
     if (btnStocks) btnStocks.disabled = true;
 
-    toast('Bypassing daily cache: Fetching live FX rates, CMP, and API signals...');
+    toast('Bypassing daily cache: Fetching real-time FX rates, CMP, and API signals...');
 
     try {
       $('fxStatus').textContent = 'Syncing...';
-      const fx = await fetchLiveCurrencyRates();
+      const fx = await fetchLiveCurrencyRates(true);
       if (fx) {
         state.rates.usdInr = fx.usdInr;
         state.rates.aedInr = fx.aedInr;
@@ -3578,7 +3778,9 @@
           repeat: ['none','monthly','quarterly','yearly'].includes(c.repeat) ? c.repeat : 'monthly',
           category: c.category || 'Other', cType: c.cType === 'investment' ? 'investment' : 'expense',
           currentTerm: c.currentTerm ? parseInt(c.currentTerm) : 1, totalTerm: c.totalTerm ? parseInt(c.totalTerm) : null,
-          expiryDate: c.expiryDate || null, paidCycle: c.paidCycle || null, customHistory: c.customHistory || {},
+          expiryDate: c.expiryDate || null,
+          lastPaidDate: c.lastPaidDate || null, lastPaymentTxId: c.lastPaymentTxId || null,
+          customHistory: c.customHistory || {},
           note: c.note || '', createdAt: c.createdAt || c.dueDate
         }));
     }
@@ -3690,7 +3892,7 @@
     renderAll();
     updateStatusPills();
     setTimeout(async () => {
-      const fx = await fetchLiveCurrencyRates();
+      const fx = await fetchLiveCurrencyRates(false);
       if (fx) {
         state.rates = fx;
         $('fxUsdLabel').textContent = `₹${fmt(fx.usdInr)}`;
@@ -3882,7 +4084,7 @@
   function resetTxForm() {
     editingTxId = null;
     $('txFormTitle').textContent = 'Add entry';
-    $('btnAdd entry').textContent = 'Add entry';
+    $('btnAddEntry').textContent = 'Add entry';
     $('btnCancelEditTx').style.display = 'none';
     $('fAmount').value = ''; $('fNote').value = ''; $('fDate').value = todayISO();
     $('fRepaymentDate').value = '';
@@ -3891,7 +4093,7 @@
   }
   $('btnCancelEditTx').addEventListener('click', resetTxForm);
 
-  $('btnAdd entry').addEventListener('click', () => {
+  $('btnAddEntry').addEventListener('click', () => {
     const date = $('fDate').value || todayISO();
     const category = $('fCategory').value;
     const amount = parseFloat($('fAmount').value);
@@ -4035,7 +4237,7 @@
     if (!t) return;
     editingTxId = id;
     $('txFormTitle').textContent = 'Edit entry';
-    $('btnAdd entry').textContent = 'Save entry';
+    $('btnAddEntry').textContent = 'Save entry';
     $('btnCancelEditTx').style.display = 'inline-block';
     setType(t.type);
     $('fDate').value = t.date;
@@ -4057,7 +4259,7 @@
     const months = [];
     for (let i=5;i>=0;i--){
       const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-      months.push(d.toISOString().slice(0,7));
+      months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
     }
     const totals = months.map(m => {
       const inc = state.transactions.filter(t=>t.type==='income' && t.date.slice(0,7)===m).reduce((a,t)=>a+t.amount,0);
@@ -4275,7 +4477,7 @@
     return [...state.commitments].map(c => {
       const due = parseDateOnly(c.dueDate);
       const cycleKey = due.toISOString().slice(0,7);
-      const isPaid = c.paidCycle === cycleKey;
+      const isPaid = c.lastPaidDate === todayISO();
       return { c, due, days: daysDiff(due), isPaid, cycleKey };
     }).sort((a,b) => a.due - b.due);
   }
@@ -4321,7 +4523,7 @@
     } else {
       state.commitments.push({
         id: uid(), cardId: null, policyId: null, name, amount, fullAmount, dueDate, repeat, category, cType: currentCType, note,
-        currentTerm, totalTerm, expiryDate, paidCycle: null, customHistory: {}, createdAt: new Date().toISOString()
+        currentTerm, totalTerm, expiryDate, lastPaidDate: null, lastPaymentTxId: null, customHistory: {}, createdAt: new Date().toISOString()
       });
       toast('Commitment added.');
       resetCommForm();
@@ -4394,13 +4596,39 @@
   function logCommitmentPayment(id){
     const c = state.commitments.find(x => x.id === id);
     if (!c) return;
-    
+
+    const today = todayISO();
+
+    // Second click on the same day undoes the payment just logged.
+    if (c.lastPaidDate === today && c.lastPaymentTxId) {
+      state.transactions = state.transactions.filter(t => t.id !== c.lastPaymentTxId);
+      if (c._prevSnapshot) {
+        c.currentTerm = c._prevSnapshot.currentTerm;
+        c.dueDate = c._prevSnapshot.dueDate;
+        c.customHistory = c._prevSnapshot.customHistory;
+        delete c._prevSnapshot;
+      }
+      c.lastPaidDate = null;
+      c.lastPaymentTxId = null;
+      toast('Payment undone.');
+      markDirty(); renderAll();
+      return;
+    }
+
+    // Snapshot pre-payment state so the action above can cleanly undo it.
+    c._prevSnapshot = {
+      currentTerm: c.currentTerm,
+      dueDate: c.dueDate,
+      customHistory: JSON.parse(JSON.stringify(c.customHistory || {}))
+    };
+
     const activeInst = c.currentTerm || 1;
     const entryType = c.cType === 'investment' ? 'investment' : 'expense';
     let termNote = c.totalTerm ? ` (Term ${activeInst}/${c.totalTerm})` : ` (Term ${activeInst})`;
-    
+
+    const txId = uid();
     state.transactions.push({
-      id: uid(), date: todayISO(), type: entryType, category: c.category,
+      id: txId, date: today, type: entryType, category: c.category,
       amount: c.amount, note: c.name + termNote + (c.note ? ' — ' + c.note : ''),
       createdAt: new Date().toISOString()
     });
@@ -4412,7 +4640,8 @@
     const curDue = parseDateOnly(c.dueDate);
     const monthsToAdd = c.repeat === 'quarterly' ? 3 : (c.repeat === 'yearly' ? 12 : 1);
     c.dueDate = fmtDateISO(addMonths(curDue, monthsToAdd));
-    c.paidCycle = null;
+    c.lastPaidDate = today;
+    c.lastPaymentTxId = txId;
 
     if (c.repeat === 'none'){
       state.commitments = state.commitments.filter(x => x.id !== id);
@@ -4746,7 +4975,7 @@
           id: uid(), cardId: null, policyId: polId, name: `${name} (${company})`,
           amount: premium, fullAmount: null, dueDate, repeat: repMap[freq] || 'monthly',
           category: 'Insurance Premium', cType: 'expense', note: `Auto-linked from Policy ${number}`,
-          currentTerm: 1, totalTerm: payTerm, expiryDate: null, paidCycle: null, customHistory: {}, createdAt: new Date().toISOString()
+          currentTerm: 1, totalTerm: payTerm, expiryDate: null, lastPaidDate: null, lastPaymentTxId: null, customHistory: {}, createdAt: new Date().toISOString()
         });
       }
     }
