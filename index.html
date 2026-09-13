@@ -56,7 +56,6 @@
     box-sizing: border-box;
   }
 
-  /* --- HEADER RESPONSIVENESS FIXES --- */
   header {
     display: flex;
     justify-content: space-between;
@@ -185,7 +184,6 @@
     white-space: nowrap;
   }
 
-  /* View Mode Toggle Switch */
   .view-mode-toggle {
     display: inline-flex;
     background: var(--surface-2);
@@ -212,7 +210,6 @@
     box-shadow: var(--shadow-sm);
   }
 
-  /* 3-Dot Kebab Menu */
   .menu-wrapper {
     position: relative;
     display: inline-block;
@@ -287,9 +284,7 @@
     letter-spacing: 0.5px;
   }
 
-  .mobile-header-bar {
-    display: none;
-  }
+  .mobile-header-bar { display: none; }
 
   .dot {
     display: inline-block;
@@ -303,9 +298,7 @@
     background: var(--income);
     box-shadow: 0 0 8px var(--income);
   }
-  .dot.off {
-    background: var(--expense);
-  }
+  .dot.off { background: var(--expense); }
 
   .gate {
     max-width: 540px;
@@ -398,7 +391,6 @@
   }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* TASKBAR CONTAINER */
   .pagenav {
     display: flex;
     gap: 8px;
@@ -491,9 +483,7 @@
     margin-bottom: 24px; 
     width: 100%;
   }
-  .dash-grid > div {
-    min-width: 0;
-  }
+  .dash-grid > div { min-width: 0; }
   
   @media(max-width: 1120px) {
     .grid2 { grid-template-columns: 1fr; }
@@ -1165,9 +1155,7 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   #fileInputImport { display: none; }
 
-  /* =========================================================
-     MOBILE-VIEW ARCHITECTURE (TASKBAR BOTTOM BAR DOCKED)
-     ========================================================= */
+  /* Mobile-view */
   body.view-mobile {
     background: #080c0e;
     padding-bottom: 75px;
@@ -1188,9 +1176,7 @@
     overflow-x: hidden;
   }
 
-  body.view-mobile header {
-    display: none !important;
-  }
+  body.view-mobile header { display: none !important; }
 
   body.view-mobile .mobile-header-bar {
     display: flex;
@@ -1203,9 +1189,7 @@
     box-sizing: border-box;
   }
 
-  body.view-mobile #dashEngineBar {
-    display: none !important;
-  }
+  body.view-mobile #dashEngineBar { display: none !important; }
 
   body.view-mobile .pagenav {
     position: fixed;
@@ -1239,16 +1223,9 @@
     grid-template-columns: 1fr 1fr !important;
     gap: 10px !important;
   }
-  body.view-mobile .sum-cell {
-    padding: 12px 10px;
-  }
-  body.view-mobile .sum-label {
-    font-size: 9.5px;
-    margin-bottom: 4px;
-  }
-  body.view-mobile .sum-val {
-    font-size: 17px;
-  }
+  body.view-mobile .sum-cell { padding: 12px 10px; }
+  body.view-mobile .sum-label { font-size: 9.5px; margin-bottom: 4px; }
+  body.view-mobile .sum-val { font-size: 17px; }
 
   body.view-mobile .grid2,
   body.view-mobile .dash-grid,
@@ -1270,13 +1247,8 @@
     box-sizing: border-box;
   }
 
-  body.view-mobile .type-toggle {
-    flex-wrap: wrap;
-  }
-  body.view-mobile .type-toggle button {
-    flex: 1 1 45%;
-    font-size: 11.5px;
-  }
+  body.view-mobile .type-toggle { flex-wrap: wrap; }
+  body.view-mobile .type-toggle button { flex: 1 1 45%; font-size: 11.5px; }
 
   body.view-mobile .kebab-dropdown {
     right: 0;
@@ -1284,7 +1256,6 @@
     max-width: 260px;
   }
 
-  /* Customizer Checkbox Styling */
   .taskbar-config-item {
     display: flex;
     align-items: center;
@@ -1297,9 +1268,7 @@
     cursor: pointer;
     user-select: none;
   }
-  .taskbar-config-item:hover {
-    background: var(--surface-3);
-  }
+  .taskbar-config-item:hover { background: var(--surface-3); }
   .taskbar-config-item label {
     margin: 0;
     font-size: 13px;
@@ -1334,7 +1303,7 @@
 </div>
 
 <div class="wrap" id="app" style="display:none;">
-  <!-- MOBILE DEDICATED HEADER BAR (Active Only in Mobile View) -->
+  <!-- MOBILE DEDICATED HEADER BAR -->
   <div class="mobile-header-bar">
     <div style="display:flex;flex-direction:column;">
       <h1 style="font-size:22px;">Ledger<span>.</span></h1>
@@ -1442,7 +1411,7 @@
     </div>
   </header>
 
-  <!-- TASKBAR (DESKTOP & MOBILE BOTTOM BAR) -->
+  <!-- TASKBAR -->
   <div class="pagenav" id="mainTaskbar">
     <button id="navDashboard" class="active" data-tab="dashboard">Dashboard</button>
     <button id="navGoals" data-tab="goals">Goals &amp; Savings</button>
@@ -1515,7 +1484,7 @@
     </div>
 
     <div class="panel" style="margin-top:24px;">
-      <h3>Upcoming Payment Reminders <span class="hint">prominently featured</span></h3>
+      <h3>Upcoming Payment Reminders <span class="hint">Borrow &amp; Fixed Commitments</span></h3>
       <div id="dashReminders"></div>
       <button class="small ghost" id="btnViewAllCommitments" style="margin-top:18px;">View &amp; Manage All in Commitments &rarr;</button>
     </div>
@@ -1684,7 +1653,6 @@
       </div>
     </div>
 
-    <!-- TOP BUY SUGGESTIONS SPOTLIGHT -->
     <div class="panel" style="border-left: 4px solid var(--income);">
       <h3 style="color:var(--income);">🎯 Top Buy &amp; Dip-Accumulation Suggestions <span class="hint">Weighted by 20/50 DMA Proximity + All API Signals</span></h3>
       <div class="note" style="margin-top:0;">
@@ -1804,10 +1772,18 @@
           <input type="date" id="fDate">
           <label>Category</label>
           <select id="fCategory"></select>
+          
+          <!-- Repayment date optional container -->
+          <div id="fRepayWrap" style="display:none;background:var(--surface-2);border:1px dashed var(--gold);padding:10px;border-radius:6px;margin-top:12px;">
+            <label style="margin-top:0;color:var(--gold);">Repayment Target Date</label>
+            <input type="date" id="fRepaymentDate">
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Setting a date will automatically show a repayment reminder on the Dashboard.</div>
+          </div>
+
           <label>Amount</label>
           <input type="number" id="fAmount" placeholder="0.00" step="0.01" min="0">
           <label>Note (optional)</label>
-          <input type="text" id="fNote" placeholder="e.g. groceries at market">
+          <input type="text" id="fNote" placeholder="e.g. Borrowed from friend / grocery bill">
           <div style="display:flex;gap:8px;margin-top:20px;">
             <button class="primary" id="btnAdd entry" style="flex:1;">Add entry</button>
             <button id="btnCancelEditTx" style="display:none;">Cancel</button>
@@ -2144,8 +2120,8 @@
   "use strict";
 
   const DEFAULT_CATEGORIES = {
-    income: ["Salary","Business","Investment returns","Gift","Other income"],
-    expense: ["Food","Transport","Utilities","Rent","Health","Entertainment","Shopping","Credit card repayemnt","Insurance Premium","Other expense"],
+    income: ["Salary","Business","Borrow","Investment returns","Gift","Other income"],
+    expense: ["Food","Transport","Utilities","Rent","Health","Entertainment","Shopping","Credit card repayemnt","Insurance Premium","Borrow Repayment","Other expense"],
     investment: ["Stocks","Mutual Funds","Fixed Deposit","Gold","KSFE-Chitty","Real Estate","Crypto","Retirement Fund","Insurance / ULIP","Other investment"],
     commitment: ["Rent","EMI / Loan","Subscription","Insurance","Utility Bill","Credit Card","Stocks","Mutual Funds","Fixed Deposit","Gold","Real Estate","Crypto","Retirement Fund","Insurance / ULIP","Other","KSFE-Chitty"]
   };
@@ -2177,14 +2153,14 @@
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   let state = {
-    version: 16,
+    version: 17,
     openingBalance: 0,
     alphaVantageKey: "",
     finnhubKey: "",
     tiingoKey: "",
     marketauxKey: "",
     customCategories: null,
-    taskbarTabs: ["dashboard"], // Default initial state: Dashboard only
+    taskbarTabs: ["dashboard"],
     avCache: { lastSyncDate: null, stocks: {} },
     rates: { usdInr: 83.50, aedInr: 22.75 },
     transactions: [],
@@ -2324,7 +2300,7 @@
     toast('Taskbar reset: showing Dashboard only.');
   });
 
-  // --- Kebab (3-Dot) Menu Controller ---
+  // --- Kebab Menu Controller ---
   function bindKebab(btn, menu) {
     if (!btn || !menu) return;
     btn.addEventListener('click', (e) => {
@@ -2485,7 +2461,7 @@
     toast(`Added "${val}" to ${activeCatManagerType} categories.`);
   });
 
-  // --- Network & Live Currency Fetchers ---
+  // --- Helpers & Live Network ---
   async function fetchWithTimeout(url, timeoutMs = 6000) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -2531,63 +2507,7 @@
     return s;
   }
 
-  // --- Multi-Platform Quote & Indicator Engines ---
-  async function fetchLiveStockPriceMultiTier(symbol, market) {
-    const sym = symbol.trim().toUpperCase();
-
-    if (state.tiingoKey && state.tiingoKey.trim().length > 3) {
-      try {
-        const ticker = getMarketResolvedTicker(sym, market);
-        const res = await fetchWithTimeout(`https://api.tiingo.com/tiingo/daily/${encodeURIComponent(ticker)}/prices?token=${encodeURIComponent(state.tiingoKey)}`, 4500);
-        if (res.ok) {
-          const d = await res.json();
-          if (Array.isArray(d) && d.length > 0 && d[d.length - 1].close) {
-            return { price: d[d.length - 1].close, source: 'Tiingo' };
-          }
-        }
-      } catch(e){}
-    }
-
-    if (state.finnhubKey && state.finnhubKey.trim().length > 3) {
-      try {
-        const ticker = getMarketResolvedTicker(sym, market);
-        const res = await fetchWithTimeout(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(ticker)}&token=${encodeURIComponent(state.finnhubKey)}`, 4500);
-        if (res.ok) {
-          const d = await res.json();
-          if (typeof d?.c === 'number' && d.c > 0) return { price: d.c, source: 'Finnhub' };
-        }
-      } catch(e){}
-    }
-
-    if (state.alphaVantageKey && state.alphaVantageKey.trim().length > 3) {
-      try {
-        let ticker = sym;
-        if (market === 'IN' && !ticker.endsWith('.BSE') && !ticker.endsWith('.NSE')) ticker += '.BSE';
-        else if (market === 'DFM') ticker = getMarketResolvedTicker(sym, market);
-        const res = await fetchWithTimeout(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(ticker)}&apikey=${encodeURIComponent(state.alphaVantageKey)}`, 4500);
-        if (res.ok) {
-          const d = await res.json();
-          const p = parseFloat(d?.["Global Quote"]?.["05. price"]);
-          if (!isNaN(p) && p > 0) return { price: p, source: 'Alpha Vantage' };
-        }
-      } catch(e){}
-    }
-
-    const ticker = getMarketResolvedTicker(sym, market);
-    const target = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
-    try {
-      const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(target)}`, 5000);
-      if (res.ok) {
-        const outer = await res.json();
-        const d = JSON.parse(outer.contents);
-        const p = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
-        if (typeof p === 'number' && p > 0) return { price: p, source: 'Yahoo (Free)' };
-      }
-    } catch(e){}
-
-    return null;
-  }
-
+  // --- Stock Intelligence Logic ---
   async function fetchFinnhubRecommendation(symbol, market) {
     if (!state.finnhubKey || state.finnhubKey.trim().length < 4) {
       return { signal: 'NO KEY', score: 0, note: 'Configure Finnhub API key in Settings' };
@@ -2704,10 +2624,7 @@
         const data = await res.json();
         const articles = data?.data || [];
         if (Array.isArray(articles) && articles.length > 0) {
-          const headlines = articles.slice(0, 3).map(a => ({
-            title: a.title, link: a.url
-          }));
-
+          const headlines = articles.slice(0, 3).map(a => ({ title: a.title, link: a.url }));
           let totalScore = 0, count = 0;
           articles.forEach(a => {
             if (Array.isArray(a.entities)) {
@@ -2827,7 +2744,6 @@
     else if (finalScore <= 35) label = 'AVOID / REDUCE';
 
     const weightMultiplier = Math.max(0.2, (finalScore / 50));
-
     return { score: finalScore, label, dmaNote, dmaScore, apiNormalizedScore, weightMultiplier };
   }
 
@@ -2870,25 +2786,10 @@
       const dma20 = tiingoRec.dma20 || avRec.dma20 || freeRec.dma20 || null;
       const dma50 = tiingoRec.dma50 || avRec.dma50 || freeRec.dma50 || null;
 
-      const sources = {
-        finnhub: finnhubRec,
-        alphaVantage: avRec,
-        tiingo: tiingoRec,
-        marketaux: mxRec,
-        freeWeb: freeRec
-      };
-
+      const sources = { finnhub: finnhubRec, alphaVantage: avRec, tiingo: tiingoRec, marketaux: mxRec, freeWeb: freeRec };
       const analysis = computeStockBuyScore(bestPrice, dma20, dma50, sources);
 
-      state.avCache.stocks[sym] = {
-        date: today,
-        cmp: bestPrice,
-        dma20: dma20,
-        dma50: dma50,
-        analysis,
-        sources
-      };
-
+      state.avCache.stocks[sym] = { date: today, cmp: bestPrice, dma20, dma50, analysis, sources };
       done++;
       await sleep(600);
     }
@@ -2930,7 +2831,6 @@
     });
 
     candidates.sort((a, b) => b.analysis.score - a.analysis.score);
-
     return { alloc, dipNote: null, rankedList: candidates };
   }
 
@@ -3135,25 +3035,10 @@
           const dma20 = tiingoRec.dma20 || avRec.dma20 || freeRec.dma20 || null;
           const dma50 = tiingoRec.dma50 || avRec.dma50 || freeRec.dma50 || null;
 
-          const sources = {
-            finnhub: finnhubRec,
-            alphaVantage: avRec,
-            tiingo: tiingoRec,
-            marketaux: mxRec,
-            freeWeb: freeRec
-          };
-
+          const sources = { finnhub: finnhubRec, alphaVantage: avRec, tiingo: tiingoRec, marketaux: mxRec, freeWeb: freeRec };
           const analysis = computeStockBuyScore(bestPrice, dma20, dma50, sources);
 
-          state.avCache.stocks[sym] = {
-            date: todayISO(),
-            cmp: bestPrice,
-            dma20: dma20,
-            dma50: dma50,
-            analysis,
-            sources
-          };
-
+          state.avCache.stocks[sym] = { date: todayISO(), cmp: bestPrice, dma20, dma50, analysis, sources };
           markDirty();
           if (fileHandle) await writeToHandle();
           renderStocks();
@@ -3169,7 +3054,6 @@
   $('capAED').addEventListener('input', () => { state.insights.capitalAED = parseFloat($('capAED').value) || 0; markDirty(); renderInsights(); });
   $('btnForceFullSync').addEventListener('click', () => runDailyIntelligenceAnalysis(true));
 
-  // --- Manual Emergency Live Refresh Action ---
   async function triggerEmergencyLiveRefresh() {
     const btnHeader = $('btnEmergencyRefresh');
     const btnStocks = $('btnRefreshPrices');
@@ -3191,7 +3075,6 @@
       }
 
       await runDailyIntelligenceAnalysis(true);
-
       $('fxStatus').textContent = `Live (${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})})`;
       toast('Live emergency refresh complete: CMP and indicators updated.');
     } catch (err) {
@@ -3262,7 +3145,7 @@
     runDailyIntelligenceAnalysis(true);
   });
 
-  // --- Core Stocks Logic ---
+  // --- Stock Holdings ---
   function resetStockForm() {
     editingStockId = null;
     $('stockFormTitle').textContent = 'Add Stock Holding';
@@ -3435,7 +3318,7 @@
     const plainText = enc.encode(JSON.stringify(dataObj));
     const encryptedBuf = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, plainText);
     return JSON.stringify({
-      encrypted: true, version: 16, salt: bufferToHex(salt), iv: bufferToHex(iv), data: bufferToHex(encryptedBuf)
+      encrypted: true, version: 17, salt: bufferToHex(salt), iv: bufferToHex(iv), data: bufferToHex(encryptedBuf)
     }, null, 2);
   }
   async function decryptData(encryptedContainer, password) {
@@ -3476,7 +3359,7 @@
 
   function normalizeState(data){
     const s = {
-      version: 16,
+      version: 17,
       openingBalance: 0,
       alphaVantageKey: "",
       finnhubKey: "",
@@ -3523,13 +3406,25 @@
       CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
     }
 
+    if (!CATEGORIES.income.some(c => c.toLowerCase() === 'borrow')) {
+      CATEGORIES.income.splice(2, 0, 'Borrow');
+    }
+    if (!CATEGORIES.expense.some(c => c.toLowerCase() === 'borrow repayment')) {
+      CATEGORIES.expense.push('Borrow Repayment');
+    }
+
     if (Array.isArray(data.transactions)){
       s.transactions = data.transactions
         .filter(t => t && t.date && t.type && typeof t.amount === 'number')
         .map(t => ({
           id: t.id || uid(), date: t.date,
           type: (t.type === 'income' || t.type === 'investment') ? t.type : 'expense',
-          category: t.category || 'Other', amount: Math.abs(t.amount), note: t.note || '', createdAt: t.createdAt || t.date
+          category: t.category || 'Other', amount: Math.abs(t.amount), note: t.note || '',
+          repaymentDate: t.repaymentDate || null,
+          repaid: Boolean(t.repaid),
+          repaidTxId: t.repaidTxId || null,
+          borrowSourceId: t.borrowSourceId || null,
+          createdAt: t.createdAt || t.date
         }));
     }
     if (Array.isArray(data.commitments)){
@@ -3809,6 +3704,14 @@
   $('btnViewAllCommitments').addEventListener('click', () => switchPage('commitments'));
 
   // --- Forms & Ledger Core ---
+  function checkBorrowCategory() {
+    const isBorrow = currentType === 'income' && ($('fCategory').value || '').toLowerCase() === 'borrow';
+    $('fRepayWrap').style.display = isBorrow ? 'block' : 'none';
+    if (!isBorrow && editingTxId === null) {
+      $('fRepaymentDate').value = '';
+    }
+  }
+
   function populateCategorySelect(){
     const sel = $('fCategory');
     sel.innerHTML = '';
@@ -3817,13 +3720,18 @@
       o.value = c; o.textContent = c;
       sel.appendChild(o);
     });
+    checkBorrowCategory();
   }
+  
+  $('fCategory').addEventListener('change', checkBorrowCategory);
+
   function setType(t){
     currentType = t;
     $('btnTypeIncome').className = t === 'income' ? 'active-income' : '';
     $('btnTypeExpense').className = t === 'expense' ? 'active-expense' : '';
     $('btnTypeInvestment').className = t === 'investment' ? 'active-investment' : '';
     populateCategorySelect();
+    checkBorrowCategory();
   }
   $('btnTypeIncome').addEventListener('click', () => setType('income'));
   $('btnTypeExpense').addEventListener('click', () => setType('expense'));
@@ -3835,6 +3743,8 @@
     $('btnAdd entry').textContent = 'Add entry';
     $('btnCancelEditTx').style.display = 'none';
     $('fAmount').value = ''; $('fNote').value = ''; $('fDate').value = todayISO();
+    $('fRepaymentDate').value = '';
+    $('fRepayWrap').style.display = 'none';
     setType('expense');
   }
   $('btnCancelEditTx').addEventListener('click', resetTxForm);
@@ -3844,19 +3754,27 @@
     const category = $('fCategory').value;
     const amount = parseFloat($('fAmount').value);
     const note = $('fNote').value.trim();
+    const isBorrow = currentType === 'income' && category.toLowerCase() === 'borrow';
+    const repaymentDate = isBorrow ? ($('fRepaymentDate').value || null) : null;
+    
     if (!amount || amount <= 0){ toast('Enter a valid amount.'); return; }
 
     if (editingTxId) {
       const t = state.transactions.find(x => x.id === editingTxId);
       if (t) {
         t.date = date; t.type = currentType; t.category = category; t.amount = amount; t.note = note;
+        t.repaymentDate = repaymentDate;
       }
       toast('Entry updated.');
       resetTxForm();
     } else {
-      state.transactions.push({ id: uid(), date, type: currentType, category, amount, note, createdAt: new Date().toISOString() });
-      $('fAmount').value = ''; $('fNote').value = '';
-      toast('Entry added.');
+      state.transactions.push({ 
+        id: uid(), date, type: currentType, category, amount, note, 
+        repaymentDate, repaid: false, repaidTxId: null,
+        createdAt: new Date().toISOString() 
+      });
+      $('fAmount').value = ''; $('fNote').value = ''; $('fRepaymentDate').value = '';
+      toast(isBorrow && repaymentDate ? 'Borrow logged & repayment reminder scheduled!' : 'Entry added.');
     }
     markDirty(); renderAll();
   });
@@ -3936,12 +3854,19 @@
     $('txEmpty').style.display = rows.length ? 'none' : 'block';
     const rowClass = { income:'income-row', expense:'expense-row', investment:'investment-row' };
     const rowSign = { income:'+', expense:'\u2212', investment:'\u2212' };
+    
     rows.forEach(t => {
       const tr = document.createElement('tr');
       tr.className = rowClass[t.type];
+      
+      let repayTag = '';
+      if (t.category.toLowerCase() === 'borrow' && t.repaymentDate) {
+        repayTag = `<br><span style="font-size:10.5px;color:var(--gold);font-family:'JetBrains Mono',monospace;">Due Repay: ${t.repaymentDate} ${t.repaid ? '(Repaid ✓)' : ''}</span>`;
+      }
+
       tr.innerHTML = `
         <td>${t.date}</td>
-        <td><span class="cat-tag">${escapeHtml(t.category)}</span></td>
+        <td><span class="cat-tag">${escapeHtml(t.category)}</span>${repayTag}</td>
         <td>${escapeHtml(t.note||'')}</td>
         <td class="amt">${rowSign[t.type]}${fmt(t.amount)}</td>
         <td class="actions-cell">
@@ -3950,10 +3875,15 @@
         </td>`;
       body.appendChild(tr);
     });
+
     body.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+      const toDelete = state.transactions.find(t => t.id === b.dataset.del);
+      if (toDelete && toDelete.repaidTxId) {
+        state.transactions = state.transactions.filter(t => t.id !== toDelete.repaidTxId);
+      }
       state.transactions = state.transactions.filter(t => t.id !== b.dataset.del);
       if (editingTxId === b.dataset.del) resetTxForm();
-      markDirty(); renderSummary(); renderLedgerTable(); renderChart(); renderAllocation(); toast('Entry deleted.');
+      markDirty(); renderAll(); toast('Entry deleted.');
     }));
     body.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => editEntry(b.dataset.edit)));
   }
@@ -3970,6 +3900,13 @@
     $('fCategory').value = t.category;
     $('fAmount').value = t.amount;
     $('fNote').value = t.note || '';
+    if ((t.category || '').toLowerCase() === 'borrow' && t.type === 'income') {
+      $('fRepayWrap').style.display = 'block';
+      $('fRepaymentDate').value = t.repaymentDate || '';
+    } else {
+      $('fRepayWrap').style.display = 'none';
+      $('fRepaymentDate').value = '';
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -4429,46 +4366,126 @@
     if (e.target.id === 'historyModal') $('historyModal').classList.remove('show');
   });
 
+  // --- Dashboard Payment Reminders with Borrow Support ---
   function renderDashboardReminders(){
     const el = $('dashReminders');
-    const list = sortedCommitments().slice(0, 6);
-    if (!list.length){
-      el.innerHTML = '<div class="empty">No upcoming payment reminders scheduled. Add commitments to see them here!</div>';
+
+    const commItems = sortedCommitments().map(({c, due, days, isPaid}) => ({
+      id: c.id,
+      name: c.name,
+      category: c.category,
+      typeLabel: c.cType === 'investment' ? 'Investment' : 'Expense',
+      amount: c.amount,
+      due: due,
+      dueDateStr: fmtDateISO(due),
+      days: days,
+      isPaid: isPaid,
+      termInfo: c.currentTerm ? (c.totalTerm ? `Term ${c.currentTerm}/${c.totalTerm}` : `Term ${c.currentTerm}`) : '',
+      isBorrow: false
+    }));
+
+    const borrowItems = state.transactions
+      .filter(t => t.type === 'income' && (t.category || '').toLowerCase() === 'borrow' && t.repaymentDate && !t.repaid)
+      .map(t => {
+        const due = parseDateOnly(t.repaymentDate);
+        const days = daysDiff(due);
+        return {
+          id: t.id,
+          name: t.note ? `Borrow (${t.note})` : 'Borrow Repayment',
+          category: 'Borrow Repayment',
+          typeLabel: 'Repayment Due',
+          amount: t.amount,
+          due: due,
+          dueDateStr: t.repaymentDate,
+          days: days,
+          isPaid: Boolean(t.repaid),
+          termInfo: 'Target Repayment',
+          isBorrow: true
+        };
+      });
+
+    const combined = [...commItems, ...borrowItems]
+      .sort((a, b) => a.due - b.due)
+      .slice(0, 8);
+
+    if (!combined.length){
+      el.innerHTML = '<div class="empty">No upcoming payment reminders scheduled. Add commitments or borrow entries to see them here!</div>';
       return;
     }
-    el.innerHTML = `<div class="reminder-cards-grid">` + list.map(({c, due, days, isPaid}) => {
-      const badge = badgeFor(days, isPaid);
-      const typeLabel = c.cType === 'investment' ? 'Investment' : 'Expense';
-      const overdueCls = days < 0 && !isPaid ? ' overdue' : '';
-      const paidCls = isPaid ? ' is-paid' : '';
-      let termInfo = c.currentTerm ? (c.totalTerm ? `Term ${c.currentTerm}/${c.totalTerm}` : `Term ${c.currentTerm}`) : '';
+
+    el.innerHTML = `<div class="reminder-cards-grid">` + combined.map(item => {
+      const badge = badgeFor(item.days, item.isPaid);
+      const overdueCls = item.days < 0 && !item.isPaid ? ' overdue' : '';
+      const paidCls = item.isPaid ? ' is-paid' : '';
 
       return `
         <div class="reminder-card${overdueCls}${paidCls}">
           <div>
             <div class="reminder-card-header">
               <div>
-                <div class="reminder-card-title">${escapeHtml(c.name)}</div>
-                <div class="reminder-card-meta"><span class="cat-tag">${escapeHtml(c.category)} &middot; ${typeLabel}</span></div>
+                <div class="reminder-card-title">${escapeHtml(item.name)}</div>
+                <div class="reminder-card-meta"><span class="cat-tag">${escapeHtml(item.category)} &middot; ${item.typeLabel}</span></div>
               </div>
               <span class="badge ${badge.cls}">${badge.label}</span>
             </div>
             <div class="reminder-card-meta" style="margin-top:8px;">
-              Due: <b>${fmtDateISO(due)}</b> ${termInfo ? '&middot; ' + termInfo : ''}
+              Due: <b>${item.dueDateStr}</b> ${item.termInfo ? '&middot; ' + item.termInfo : ''}
             </div>
           </div>
           <div class="reminder-card-body">
             <div>
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:600;">Amount Due</div>
-              <div class="reminder-card-amt">${fmt(c.amount)}</div>
+              <div class="reminder-card-amt">${fmt(item.amount)}</div>
             </div>
-            <button class="small ${isPaid ? 'paid-btn' : 'primary'}" data-dashlog="${c.id}">${isPaid ? '✓ Paid' : 'Mark as Paid'}</button>
+            ${item.isBorrow ? `
+              <button class="small ${item.isPaid ? 'paid-btn' : 'primary'}" data-borrowtoggle="${item.id}">
+                ${item.isPaid ? '✓ Repaid' : 'Mark Repaid'}
+              </button>
+            ` : `
+              <button class="small ${item.isPaid ? 'paid-btn' : 'primary'}" data-dashlog="${item.id}">
+                ${item.isPaid ? '✓ Paid' : 'Mark as Paid'}
+              </button>
+            `}
           </div>
         </div>
       `;
     }).join('') + `</div>`;
 
     el.querySelectorAll('[data-dashlog]').forEach(b => b.addEventListener('click', () => logCommitmentPayment(b.dataset.dashlog)));
+
+    el.querySelectorAll('[data-borrowtoggle]').forEach(b => b.addEventListener('click', () => {
+      const tx = state.transactions.find(t => t.id === b.dataset.borrowtoggle);
+      if (!tx) return;
+
+      if (!tx.repaid) {
+        tx.repaid = true;
+        const repaymentTxId = uid();
+        tx.repaidTxId = repaymentTxId;
+        state.transactions.push({
+          id: repaymentTxId,
+          date: todayISO(),
+          type: 'expense',
+          category: 'Borrow Repayment',
+          amount: tx.amount,
+          note: `Repayment for borrow on ${tx.date}${tx.note ? ' (' + tx.note + ')' : ''}`,
+          borrowSourceId: tx.id,
+          createdAt: new Date().toISOString()
+        });
+        toast(`Repayment of ₹${fmt(tx.amount)} recorded as Expense. Balance adjusted!`);
+      } else {
+        tx.repaid = false;
+        if (tx.repaidTxId) {
+          state.transactions = state.transactions.filter(t => t.id !== tx.repaidTxId);
+          tx.repaidTxId = null;
+        } else {
+          state.transactions = state.transactions.filter(t => t.borrowSourceId !== tx.id);
+        }
+        toast(`Repayment undone. ₹${fmt(tx.amount)} returned to balance.`);
+      }
+
+      markDirty();
+      renderAll();
+    }));
   }
 
   // --- Financial Goals Logic ---
