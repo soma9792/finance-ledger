@@ -6,6 +6,8 @@
 <title>Ledger & Financial Tracker (Multi-Tier Intelligence)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- SheetJS Library for direct client-side Excel (.xlsx) export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
     --ink: #0b0f12;
@@ -1330,6 +1332,11 @@
             <span>⚡ Force Live Refresh</span>
             <span style="font-size:11px;color:var(--gold);">Live</span>
           </button>
+          <div class="kebab-header-section">📊 Export &amp; Reports</div>
+          <button class="kebab-item" id="kebabExportExcelMobile" type="button">
+            <span>📊 Export Excel (.xlsx)</span>
+            <span style="font-size:11px;color:var(--income);">All Data</span>
+          </button>
           <div class="kebab-header-section">⚙ Customization &amp; Config</div>
           <button class="kebab-item" id="kebabCustomizeTaskbarMobile" type="button">
             <span>🛠 Customize Taskbar</span>
@@ -1395,6 +1402,11 @@
             <button class="kebab-item" id="kebabRefresh" type="button">
               <span>⚡ Force Refresh</span>
               <span style="font-size:11px;color:var(--gold);">Live</span>
+            </button>
+            <div class="kebab-header-section">📊 Export &amp; Reports</div>
+            <button class="kebab-item" id="kebabExportExcel" type="button">
+              <span>📊 Export Excel (.xlsx)</span>
+              <span style="font-size:11px;color:var(--income);">All Data</span>
             </button>
             <div class="kebab-header-section">⚙ Taskbar &amp; Categories</div>
             <button class="kebab-item" id="kebabCustomizeTaskbar" type="button">
@@ -1645,7 +1657,7 @@
     <div class="panel">
       <h3>Multi-Platform Stock Intelligence &amp; Daily Cache <span class="hint">Finnhub, Alpha Vantage, Tiingo &amp; Marketaux</span></h3>
       <div class="note" style="margin-top:0;margin-bottom:16px;">
-        Daily quotes, 20/50 DMAs (Daily Moving Averages), Finnhub analyst ratings, Tiingo daily series, and Marketaux sentiment scores are cached directly inside your decrypted JSON. Zero extra API calls are consumed upon reopening today.
+        Daily quotes, 20/50 DMAs (Daily Moving Averages), Finnhub analyst ratings, Tiingo daily series, and Marketaux sentiment scores are cached directly inside your decrypted JSON. Zero extra API calls are consumed upon reopening today[cite: 1].
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="primary" id="btnForceFullSync" type="button">↻ Force Full Daily Sync</button>
@@ -1656,7 +1668,7 @@
     <div class="panel" style="border-left: 4px solid var(--income);">
       <h3 style="color:var(--income);">🎯 Top Buy &amp; Dip-Accumulation Suggestions <span class="hint">Weighted by 20/50 DMA Proximity + All API Signals</span></h3>
       <div class="note" style="margin-top:0;">
-        Algorithms give <b>highest weightage</b> to stocks consolidating near their 20 DMA or pulling back into their 50 DMA support, merged with Wall Street, technicals, and news sentiment.
+        Algorithms give <b>highest weightage</b> to stocks consolidating near their 20 DMA or pulling back into their 50 DMA support, merged with Wall Street, technicals, and news sentiment[cite: 1].
       </div>
       <div id="topBuyPicks" class="top-picks-container"></div>
     </div>
@@ -1664,7 +1676,7 @@
     <div class="panel">
       <h3>Monthly Investing Plan <span class="hint">70% Regular SIP / 30% Weighted Dip-Buy near 20/50 DMA</span></h3>
       <div class="note" style="margin-top:0;">
-        Enter this month's investable capital per market. 70% is spread as regular DCA; 30% is allocated dynamically with <b>extra weight given to stocks closest to their 20/50 DMA</b> and positive consensus.
+        Enter this month's investable capital per market. 70% is spread as regular DCA; 30% is allocated dynamically with <b>extra weight given to stocks closest to their 20/50 DMA</b> and positive consensus[cite: 1].
       </div>
       <div class="flex-row" style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;">
         <div>
@@ -1984,11 +1996,6 @@
       </div>
     </div>
   </section>
-
-  <!-- FOOTER -->
-  <footer style="margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line-soft); text-align: center; font-size: 11.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;">
-    &copy; All rights reserved to EFX-4
-  </footer>
 </div>
 
 <!-- MODAL: Customize Taskbar -->
@@ -2059,7 +2066,7 @@
   <div class="modal-box" style="max-width:580px;">
     <button class="modal-close" id="btnCancelApiKeys">&times;</button>
     <h4 style="margin:0 0 6px;font-family:'Source Serif 4',serif;font-size:21px;">API Keys Configuration</h4>
-    <p class="modal-sub">Stored strictly inside your password-encrypted JSON file. Free fallbacks automatically activate if keys are absent.</p>
+    <p class="modal-sub">Stored strictly inside your password-encrypted JSON file. Free fallbacks automatically activate if keys are absent[cite: 1].</p>
     
     <label>Finnhub API Key (US &amp; Global Quotes &amp; Analyst Ratings)</label>
     <input type="text" id="finnhubKeyInput" placeholder="e.g. cxxxxxxxx..." style="font-family:'JetBrains Mono',monospace;margin-bottom:12px;">
@@ -2305,6 +2312,128 @@
     toast('Taskbar reset: showing Dashboard only.');
   });
 
+  // --- Excel (.xlsx) Multi-Tab Full Export Logic ---
+  function exportLedgerToExcel() {
+    try {
+      if (typeof XLSX === 'undefined') {
+        toast('Excel export library loading... Please check internet access or retry.');
+        return;
+      }
+
+      toast('Generating Excel workbook with financial metrics...');
+
+      const grossIncome = state.transactions.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0);
+      const totalExpense = state.transactions.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
+      const totalInvest = state.transactions.filter(t => t.type === 'investment').reduce((a, t) => a + t.amount, 0);
+      const totalGoalDeposits = getGoalDepositsTotal();
+      const opening = state.openingBalance || 0;
+      const unutilizedBalance = opening + grossIncome - totalExpense - totalInvest - totalGoalDeposits;
+
+      // Ascii Visual Diagram Bar Builder
+      const maxVal = Math.max(grossIncome, totalExpense, totalInvest, 1);
+      const makeBar = val => {
+        const bars = Math.round((val / maxVal) * 25);
+        return '█'.repeat(bars) + '░'.repeat(Math.max(0, 25 - bars));
+      };
+
+      const overviewData = [
+        ["FINANCIAL REPORT & LEDGER OVERVIEW", ""],
+        ["Generated On", new Date().toLocaleString()],
+        ["", ""],
+        ["CORE METRIC", "AMOUNT (₹)"],
+        ["Opening Balance", Number(opening.toFixed(2))],
+        ["Gross Income (+)", Number(grossIncome.toFixed(2))],
+        ["Total Expenses (-)", Number(totalExpense.toFixed(2))],
+        ["Investments (-)", Number(totalInvest.toFixed(2))],
+        ["Goal Allocations (-)", Number(totalGoalDeposits.toFixed(2))],
+        ["Unutilized / Cash Balance", Number(unutilizedBalance.toFixed(2))],
+        ["", ""],
+        ["DIAGRAM: VISUAL METRIC SPLIT", "ASCII BAR CHART PROPORTION (SCALE: 25)"],
+        ["Income (" + fmt(grossIncome) + ")", makeBar(grossIncome)],
+        ["Expenses (" + fmt(totalExpense) + ")", makeBar(totalExpense)],
+        ["Investments (" + fmt(totalInvest) + ")", makeBar(totalInvest)],
+        ["Unutilized Cash (" + fmt(Math.max(0, unutilizedBalance)) + ")", makeBar(Math.max(0, unutilizedBalance))]
+      ];
+
+      const ledgerData = [
+        ["Date", "Type", "Category", "Amount (Signed)", "Absolute Amount", "Note", "Repayment Target", "Repaid?"]
+      ];
+
+      const sortedTxs = [...state.transactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      sortedTxs.forEach(t => {
+        const signed = t.type === 'income' ? t.amount : -t.amount;
+        ledgerData.push([
+          t.date,
+          t.type.toUpperCase(),
+          t.category,
+          Number(signed.toFixed(2)),
+          Number(t.amount.toFixed(2)),
+          t.note || "",
+          t.repaymentDate || "",
+          t.repaid ? "YES" : (t.repaymentDate ? "NO" : "")
+        ]);
+      });
+
+      const stocksData = [
+        ["Market", "Symbol", "Company Name", "Quantity", "Avg Purchase Price", "CMP", "Total Cost", "Current Value", "Unrealized P&L"]
+      ];
+      (state.stocks || []).forEach(s => {
+        const cost = (s.qty || 0) * (s.avgPrice || 0);
+        const cur = (s.qty || 0) * (s.cmp || 0);
+        const pl = cur - cost;
+        stocksData.push([
+          s.market,
+          s.symbol,
+          s.name || "",
+          Number(s.qty || 0),
+          Number((s.avgPrice || 0).toFixed(3)),
+          Number((s.cmp || 0).toFixed(3)),
+          Number(cost.toFixed(2)),
+          Number(cur.toFixed(2)),
+          Number(pl.toFixed(2))
+        ]);
+      });
+
+      const commitmentsData = [
+        ["Name", "Type", "Category", "Net Amount", "Full Amount", "Next Due Date", "Term", "Repeats", "Notes"]
+      ];
+      (state.commitments || []).forEach(c => {
+        commitmentsData.push([
+          c.name,
+          (c.cType || "expense").toUpperCase(),
+          c.category,
+          Number((c.amount || 0).toFixed(2)),
+          c.fullAmount ? Number(c.fullAmount.toFixed(2)) : "",
+          c.dueDate,
+          c.currentTerm ? (c.totalTerm ? `${c.currentTerm}/${c.totalTerm}` : `${c.currentTerm}`) : "",
+          c.repeat,
+          c.note || ""
+        ]);
+      });
+
+      const wb = XLSX.utils.book_new();
+      const wsOverview = XLSX.utils.aoa_to_sheet(overviewData);
+      const wsLedger = XLSX.utils.aoa_to_sheet(ledgerData);
+      const wsStocks = XLSX.utils.aoa_to_sheet(stocksData);
+      const wsCommitments = XLSX.utils.aoa_to_sheet(commitmentsData);
+
+      wsOverview['!cols'] = [{ wch: 32 }, { wch: 45 }];
+      wsLedger['!cols'] = [{ wch: 13 }, { wch: 12 }, { wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 35 }, { wch: 18 }, { wch: 10 }];
+      wsStocks['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 25 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+      wsCommitments['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 30 }];
+
+      XLSX.utils.book_append_sheet(wb, wsOverview, "Summary & Diagram");
+      XLSX.utils.book_append_sheet(wb, wsLedger, "Ledger Detailed");
+      XLSX.utils.book_append_sheet(wb, wsStocks, "Stock Holdings");
+      XLSX.utils.book_append_sheet(wb, wsCommitments, "Commitments");
+
+      XLSX.writeFile(wb, `Financial_Ledger_Export_${todayISO()}.xlsx`);
+      toast('Excel workbook exported successfully.');
+    } catch (err) {
+      toast('Excel export failed: ' + err.message);
+    }
+  }
+
   // --- Kebab Menu Controller ---
   function bindKebab(btn, menu) {
     if (!btn || !menu) return;
@@ -2331,10 +2460,18 @@
     triggerEmergencyLiveRefresh();
   };
 
+  const triggerExportExcelFromMenu = () => {
+    if ($('kebabMenu')) $('kebabMenu').classList.remove('show');
+    if ($('kebabMenuMobile')) $('kebabMenuMobile').classList.remove('show');
+    exportLedgerToExcel();
+  };
+
   $('kebabEngineStatus').addEventListener('click', openTelemetry);
   $('kebabRefresh').addEventListener('click', triggerRefreshFromMenu);
+  $('kebabExportExcel').addEventListener('click', triggerExportExcelFromMenu);
   $('kebabEngineStatusMobile').addEventListener('click', openTelemetry);
   $('kebabRefreshMobile').addEventListener('click', triggerRefreshFromMenu);
+  $('kebabExportExcelMobile').addEventListener('click', triggerExportExcelFromMenu);
   $('btnCloseEngineStatus').addEventListener('click', () => $('engineStatusModal').classList.remove('show'));
   $('btnModalForceRefresh').addEventListener('click', () => { $('engineStatusModal').classList.remove('show'); triggerEmergencyLiveRefresh(); });
 
