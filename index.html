@@ -1645,7 +1645,7 @@
     <div class="panel">
       <h3>Multi-Platform Stock Intelligence &amp; Daily Cache <span class="hint">Finnhub, Alpha Vantage, Tiingo &amp; Marketaux</span></h3>
       <div class="note" style="margin-top:0;margin-bottom:16px;">
-        Daily quotes, 20/50 DMAs (Daily Moving Averages), Finnhub analyst ratings, Tiingo daily series, and Marketaux sentiment scores are cached directly inside your decrypted JSON. Zero extra API calls are consumed upon reopening today[cite: 1].
+        Daily quotes, 20/50 DMAs (Daily Moving Averages), Finnhub analyst ratings, Tiingo daily series, and Marketaux sentiment scores are cached directly inside your decrypted JSON. Zero extra API calls are consumed upon reopening today.
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="primary" id="btnForceFullSync" type="button">↻ Force Full Daily Sync</button>
@@ -1656,7 +1656,7 @@
     <div class="panel" style="border-left: 4px solid var(--income);">
       <h3 style="color:var(--income);">🎯 Top Buy &amp; Dip-Accumulation Suggestions <span class="hint">Weighted by 20/50 DMA Proximity + All API Signals</span></h3>
       <div class="note" style="margin-top:0;">
-        Algorithms give <b>highest weightage</b> to stocks consolidating near their 20 DMA or pulling back into their 50 DMA support, merged with Wall Street, technicals, and news sentiment[cite: 1].
+        Algorithms give <b>highest weightage</b> to stocks consolidating near their 20 DMA or pulling back into their 50 DMA support, merged with Wall Street, technicals, and news sentiment.
       </div>
       <div id="topBuyPicks" class="top-picks-container"></div>
     </div>
@@ -1664,7 +1664,7 @@
     <div class="panel">
       <h3>Monthly Investing Plan <span class="hint">70% Regular SIP / 30% Weighted Dip-Buy near 20/50 DMA</span></h3>
       <div class="note" style="margin-top:0;">
-        Enter this month's investable capital per market. 70% is spread as regular DCA; 30% is allocated dynamically with <b>extra weight given to stocks closest to their 20/50 DMA</b> and positive consensus[cite: 1].
+        Enter this month's investable capital per market. 70% is spread as regular DCA; 30% is allocated dynamically with <b>extra weight given to stocks closest to their 20/50 DMA</b> and positive consensus.
       </div>
       <div class="flex-row" style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;">
         <div>
@@ -1984,6 +1984,11 @@
       </div>
     </div>
   </section>
+
+  <!-- FOOTER -->
+  <footer style="margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line-soft); text-align: center; font-size: 11.5px; color: var(--muted); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;">
+    &copy; All rights reserved to EFX-4
+  </footer>
 </div>
 
 <!-- MODAL: Customize Taskbar -->
@@ -2054,7 +2059,7 @@
   <div class="modal-box" style="max-width:580px;">
     <button class="modal-close" id="btnCancelApiKeys">&times;</button>
     <h4 style="margin:0 0 6px;font-family:'Source Serif 4',serif;font-size:21px;">API Keys Configuration</h4>
-    <p class="modal-sub">Stored strictly inside your password-encrypted JSON file. Free fallbacks automatically activate if keys are absent[cite: 1].</p>
+    <p class="modal-sub">Stored strictly inside your password-encrypted JSON file. Free fallbacks automatically activate if keys are absent.</p>
     
     <label>Finnhub API Key (US &amp; Global Quotes &amp; Analyst Ratings)</label>
     <input type="text" id="finnhubKeyInput" placeholder="e.g. cxxxxxxxx..." style="font-family:'JetBrains Mono',monospace;margin-bottom:12px;">
