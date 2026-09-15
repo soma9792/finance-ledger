@@ -1087,6 +1087,44 @@
   .policy-stat-lbl { font-size: 10.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
   .policy-stat-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; color: var(--paper); }
 
+  .mf-search-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 12.5px;
+  }
+  .mf-search-row:last-child { border-bottom: none; }
+  .mf-search-results {
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    margin-top: 8px;
+  }
+  .mf-tx-panel {
+    margin-top: 14px;
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+  }
+  .mf-tx-add {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 12px;
+  }
+  .mf-tx-add label { font-size: 10.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 4px; display: block; }
+  .mf-tx-add input, .mf-tx-add select { margin: 0; }
+  .mf-tx-table-wrap { max-height: 220px; overflow-y: auto; }
+  .mf-badge-gain { color: var(--income); border-color: var(--income-border); background: var(--income-soft); }
+  .mf-badge-loss { color: var(--expense); border-color: var(--expense-border); background: var(--expense-soft); }
+
   .burden-panel {
     background: linear-gradient(135deg, rgba(251, 113, 133, 0.06) 0%, rgba(20, 27, 31, 1) 100%) !important;
     border: 1px solid var(--expense-border) !important;
@@ -1428,6 +1466,7 @@
     <button id="navDashboard" class="active" data-tab="dashboard">Dashboard</button>
     <button id="navGoals" data-tab="goals">Goals &amp; Savings</button>
     <button id="navStocks" data-tab="stocks">Stock Holdings</button>
+    <button id="navMutualfunds" data-tab="mutualfunds">Mutual Funds</button>
     <button id="navInsights" data-tab="insights">Market Insights &amp; Planner</button>
     <button id="navPolicies" data-tab="policies">Policies</button>
     <button id="navLedger" data-tab="ledger">Ledger</button>
@@ -1647,6 +1686,113 @@
             </table>
           </div>
           <div id="stUsdEmpty" class="empty" style="display:none;">No US stock holdings added.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MUTUAL FUNDS (IN) -->
+  <section id="pageMutualfunds" class="page">
+    <div class="fx-banner">
+      <div class="fx-badges">
+        <span style="color:var(--muted);text-transform:uppercase;font-size:11px;font-weight:600;">NAV Engine:</span>
+        <span class="fx-item" id="mfStatus">Auto-sync active</span>
+      </div>
+      <button class="primary small" id="btnRefreshMfNav" type="button">↻ Refresh NAV &amp; XIRR</button>
+    </div>
+
+    <div class="stock-summary">
+      <div class="stock-card">
+        <div class="lbl">Total Invested</div>
+        <div class="val" id="mfTotalInvested">₹0.00</div>
+      </div>
+      <div class="stock-card">
+        <div class="lbl">Current Value</div>
+        <div class="val" id="mfTotalValue">₹0.00</div>
+      </div>
+      <div class="stock-card">
+        <div class="lbl">Overall Gain / Loss</div>
+        <div class="val" id="mfTotalGain">₹0.00</div>
+      </div>
+      <div class="stock-card">
+        <div class="lbl">Portfolio XIRR</div>
+        <div class="val" id="mfTotalXirr" style="color:var(--gold);">--</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h3 id="mfFormTitle">Add Mutual Fund (IN)</h3>
+        <label>Search AMFI Scheme (optional)</label>
+        <div class="flex-row">
+          <div><input type="text" id="mfSearchQuery" placeholder="e.g. Parag Parikh Flexi Cap"></div>
+          <div style="flex:0 0 auto;"><button class="ghost" id="btnMfSearch" type="button">Search</button></div>
+        </div>
+        <div class="mf-search-results" id="mfSearchResults" style="display:none;"></div>
+
+        <label>Scheme Name</label>
+        <input type="text" id="mfSchemeName" placeholder="e.g. Parag Parikh Flexi Cap Fund - Direct Growth">
+        <div class="flex-row">
+          <div>
+            <label>AMFI Scheme Code</label>
+            <input type="text" id="mfSchemeCode" placeholder="e.g. 122639">
+          </div>
+          <div>
+            <label>Folio Number</label>
+            <input type="text" id="mfFolio" placeholder="e.g. 123456789">
+          </div>
+        </div>
+        <label>Category</label>
+        <select id="mfCategory">
+          <option value="Equity">Equity</option>
+          <option value="Debt">Debt</option>
+          <option value="Hybrid">Hybrid</option>
+          <option value="ELSS">ELSS / Tax Saver</option>
+          <option value="Index">Index / ETF</option>
+          <option value="Liquid">Liquid / Overnight</option>
+          <option value="International">International</option>
+          <option value="Other">Other</option>
+        </select>
+        <label>Notes</label>
+        <input type="text" id="mfNote" placeholder="e.g. SIP for retirement goal">
+
+        <div style="margin:16px 0 4px;font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:600;">First / Initial Transaction</div>
+        <div class="flex-row">
+          <div>
+            <label>Date</label>
+            <input type="date" id="mfDate">
+          </div>
+          <div>
+            <label>Type</label>
+            <select id="mfTxType">
+              <option value="buy">Buy / SIP</option>
+              <option value="sell">Sell / Redeem</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex-row">
+          <div>
+            <label>Amount (₹)</label>
+            <input type="number" id="mfAmount" placeholder="e.g. 5000" step="0.01" min="0">
+          </div>
+          <div>
+            <label>NAV on Date (₹)</label>
+            <input type="number" id="mfTxNav" placeholder="e.g. 65.234" step="0.0001" min="0">
+          </div>
+        </div>
+        <label>Current NAV (₹, optional — auto-fetched if AMFI code given)</label>
+        <input type="number" id="mfCurrentNav" placeholder="e.g. 68.912" step="0.0001" min="0">
+        <div style="display:flex;gap:8px;margin-top:20px;">
+          <button class="primary" id="btnAddMf" style="flex:1;">Add Mutual Fund</button>
+          <button id="btnCancelEditMf" style="display:none;">Cancel</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel" style="margin-bottom:0;">
+          <h3>Your Mutual Fund Holdings (India)</h3>
+          <div id="mfContainer"></div>
+          <div id="mfEmpty" class="empty" style="display:none;">No mutual funds logged yet. Add one to start tracking XIRR.</div>
         </div>
       </div>
     </div>
@@ -2142,6 +2288,7 @@
     { id: 'dashboard', label: 'Dashboard', btnId: 'navDashboard' },
     { id: 'goals', label: 'Goals & Savings', btnId: 'navGoals' },
     { id: 'stocks', label: 'Stock Holdings', btnId: 'navStocks' },
+    { id: 'mutualfunds', label: 'Mutual Funds', btnId: 'navMutualfunds' },
     { id: 'insights', label: 'Market Insights & Planner', btnId: 'navInsights' },
     { id: 'policies', label: 'Policies', btnId: 'navPolicies' },
     { id: 'ledger', label: 'Ledger', btnId: 'navLedger' },
@@ -2180,6 +2327,7 @@
     customCategories: null,
     taskbarTabs: ["dashboard"],
     avCache: { lastSyncDate: null, stocks: {} },
+    mfCache: { lastSyncDate: null, funds: {} },
     rates: { usdInr: 83.50, aedInr: 22.75 },
     transactions: [],
     commitments: [],
@@ -2187,6 +2335,7 @@
     fixedDeposits: [],
     goals: [],
     stocks: [],
+    mutualFunds: [],
     policies: [],
     insights: { capitalIN: 0, capitalUS: 0, capitalAED: 0, excluded: [] }
   };
@@ -2196,7 +2345,8 @@
   let activeHistoryCommitmentId = null;
   let activeCatManagerType = "expense";
 
-  let editingTxId = null, editingCommId = null, editingCardId = null, editingStockId = null, editingPolicyId = null;
+  let editingTxId = null, editingCommId = null, editingCardId = null, editingStockId = null, editingPolicyId = null, editingMfId = null;
+  let expandedMfIds = new Set();
   let currentPassword = null;
 
   const $ = id => document.getElementById(id);
@@ -2399,6 +2549,26 @@
         ]);
       });
 
+      const mfData = [
+        ["Scheme Name", "AMFI Code", "Folio", "Category", "Units Held", "Invested", "Current NAV", "NAV Date", "Current Value", "Gain/Loss", "XIRR %"]
+      ];
+      (state.mutualFunds || []).forEach(f => {
+        const units = mfUnits(f);
+        const invested = mfInvested(f);
+        const curValue = mfCurrentValue(f);
+        const fx = computeFundXIRR(f);
+        mfData.push([
+          f.schemeName, f.schemeCode || "", f.folio || "", f.category || "",
+          Number(units.toFixed(3)),
+          Number(invested.toFixed(2)),
+          Number((f.currentNav || 0).toFixed(4)),
+          f.currentNavDate || "",
+          Number(curValue.toFixed(2)),
+          Number((curValue - invested).toFixed(2)),
+          fx === null ? "" : Number((fx * 100).toFixed(2))
+        ]);
+      });
+
       const commitmentsData = [
         ["Name", "Type", "Category", "Net Amount", "Full Amount", "Next Due Date", "Term", "Repeats", "Notes"]
       ];
@@ -2420,16 +2590,19 @@
       const wsOverview = XLSX.utils.aoa_to_sheet(overviewData);
       const wsLedger = XLSX.utils.aoa_to_sheet(ledgerData);
       const wsStocks = XLSX.utils.aoa_to_sheet(stocksData);
+      const wsMf = XLSX.utils.aoa_to_sheet(mfData);
       const wsCommitments = XLSX.utils.aoa_to_sheet(commitmentsData);
 
       wsOverview['!cols'] = [{ wch: 32 }, { wch: 45 }];
       wsLedger['!cols'] = [{ wch: 13 }, { wch: 12 }, { wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 35 }, { wch: 18 }, { wch: 10 }];
       wsStocks['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 25 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 16 }];
+      wsMf['!cols'] = [{ wch: 32 }, { wch: 12 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 10 }];
       wsCommitments['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 30 }];
 
       XLSX.utils.book_append_sheet(wb, wsOverview, "Summary & Diagram");
       XLSX.utils.book_append_sheet(wb, wsLedger, "Ledger Detailed");
       XLSX.utils.book_append_sheet(wb, wsStocks, "Stock Holdings");
+      XLSX.utils.book_append_sheet(wb, wsMf, "Mutual Funds");
       XLSX.utils.book_append_sheet(wb, wsCommitments, "Commitments");
 
       XLSX.writeFile(wb, `Financial_Ledger_Export_${todayISO()}.xlsx`);
@@ -3710,6 +3883,7 @@
       customCategories: null,
       taskbarTabs: ["dashboard"],
       avCache: { lastSyncDate: null, stocks: {} },
+      mfCache: { lastSyncDate: null, funds: {} },
       rates: { usdInr: 83.50, aedInr: 22.75 },
       transactions: [],
       commitments: [],
@@ -3717,6 +3891,7 @@
       fixedDeposits: [],
       goals: [],
       stocks: [],
+      mutualFunds: [],
       policies: [],
       insights: { capitalIN: 0, capitalUS: 0, capitalAED: 0, excluded: [] }
     };
@@ -3726,6 +3901,7 @@
     if (typeof data.tiingoKey === 'string') s.tiingoKey = data.tiingoKey;
     if (typeof data.marketauxKey === 'string') s.marketauxKey = data.marketauxKey;
     if (data.avCache && typeof data.avCache === 'object') s.avCache = data.avCache;
+    if (data.mfCache && typeof data.mfCache === 'object') s.mfCache = data.mfCache;
     if (data.rates && typeof data.rates.usdInr === 'number') s.rates = data.rates;
 
     if (Array.isArray(data.taskbarTabs) && data.taskbarTabs.length > 0) {
@@ -3811,6 +3987,28 @@
         usdInrRate: parseFloat(st.usdInrRate) || s.rates.usdInr, aedInrRate: parseFloat(st.aedInrRate) || s.rates.aedInr
       }));
     }
+    if (Array.isArray(data.mutualFunds)){
+      s.mutualFunds = data.mutualFunds.map(f => ({
+        id: f.id || uid(),
+        schemeName: f.schemeName || 'Mutual Fund',
+        schemeCode: f.schemeCode ? String(f.schemeCode).trim() : '',
+        folio: f.folio || '',
+        category: f.category || 'Equity',
+        note: f.note || '',
+        currentNav: parseFloat(f.currentNav) || 0,
+        currentNavDate: f.currentNavDate || null,
+        transactions: Array.isArray(f.transactions) ? f.transactions
+          .filter(t => t && t.date && typeof t.amount === 'number')
+          .map(t => ({
+            id: t.id || uid(),
+            date: t.date,
+            type: t.type === 'sell' ? 'sell' : 'buy',
+            amount: Math.abs(t.amount) || 0,
+            nav: parseFloat(t.nav) || 0,
+            units: typeof t.units === 'number' ? t.units : (parseFloat(t.nav) > 0 ? (Math.abs(t.amount) / parseFloat(t.nav)) : 0)
+          })) : []
+      }));
+    }
     s.insights = (data.insights && typeof data.insights === 'object') ? {
       capitalIN: parseFloat(data.insights.capitalIN) || 0, capitalUS: parseFloat(data.insights.capitalUS) || 0,
       capitalAED: parseFloat(data.insights.capitalAED) || 0, excluded: Array.isArray(data.insights.excluded) ? data.insights.excluded : []
@@ -3885,6 +4083,7 @@
     $('fdStartDate').value = todayISO();
     $('gDepDate').value = todayISO();
     $('polDueDate').value = todayISO();
+    $('mfDate').value = todayISO();
     setType('expense');
     setCType('expense');
     applyTaskbarVisibility();
@@ -3899,6 +4098,7 @@
         $('fxAedLabel').textContent = `₹${fmt(fx.aedInr)}`;
       }
       runDailyIntelligenceAnalysis(false);
+      refreshAllMfNav(false);
     }, 800);
   }
 
@@ -4033,12 +4233,14 @@
 
     if (p === 'insights') renderInsights();
     if (p === 'stocks') renderStocks();
+    if (p === 'mutualfunds') renderMutualFunds();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   $('navDashboard').addEventListener('click', () => switchPage('dashboard'));
   $('navGoals').addEventListener('click', () => switchPage('goals'));
   $('navStocks').addEventListener('click', () => switchPage('stocks'));
+  $('navMutualfunds').addEventListener('click', () => switchPage('mutualfunds'));
   $('navInsights').addEventListener('click', () => switchPage('insights'));
   $('navPolicies').addEventListener('click', () => switchPage('policies'));
   $('navLedger').addEventListener('click', () => switchPage('ledger'));
@@ -5163,6 +5365,410 @@
     bindDelete(fdBody); bindDelete(goldBody);
   }
 
+  // --- Mutual Funds (IN) Logic ---
+  function mfDateToISO(d){
+    if (!d) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+    const parts = String(d).split('-');
+    if (parts.length === 3 && parts[2].length === 4) {
+      const [dd, mm, yyyy] = parts;
+      return `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+    }
+    return d;
+  }
+
+  function mfUnits(fund){
+    return (fund.transactions || []).reduce((sum, t) => sum + (t.type === 'sell' ? -Math.abs(t.units||0) : Math.abs(t.units||0)), 0);
+  }
+  function mfInvested(fund){
+    return (fund.transactions || []).reduce((sum, t) => sum + (t.type === 'sell' ? -Math.abs(t.amount||0) : Math.abs(t.amount||0)), 0);
+  }
+  function mfCurrentValue(fund){
+    return mfUnits(fund) * (fund.currentNav || 0);
+  }
+
+  // Newton-Raphson XIRR with a bisection fallback for stubborn cashflow sets.
+  function xirr(cashflows){
+    const flows = (cashflows || []).filter(c => c && c.date instanceof Date && !isNaN(c.date) && typeof c.amount === 'number' && c.amount !== 0);
+    if (flows.length < 2) return null;
+    const hasPos = flows.some(c => c.amount > 0);
+    const hasNeg = flows.some(c => c.amount < 0);
+    if (!hasPos || !hasNeg) return null;
+
+    const d0 = flows[0].date.getTime();
+    const yrs = c => (c.date.getTime() - d0) / (365 * 24 * 3600 * 1000);
+    const npv = r => flows.reduce((s, c) => s + c.amount / Math.pow(1 + r, yrs(c)), 0);
+    const dnpv = r => flows.reduce((s, c) => s - (yrs(c) * c.amount) / Math.pow(1 + r, yrs(c) + 1), 0);
+
+    let rate = 0.15, converged = false;
+    for (let i = 0; i < 100; i++){
+      const f = npv(rate);
+      const df = dnpv(rate);
+      if (Math.abs(df) < 1e-10) break;
+      let next = rate - f / df;
+      if (next < -0.999999) next = (rate - 0.999999) / 2;
+      if (Math.abs(next - rate) < 1e-7){ rate = next; converged = true; break; }
+      rate = next;
+    }
+    if (!converged || !isFinite(rate)) {
+      let lo = -0.99, hi = 10, flo = npv(lo), fhi = npv(hi);
+      if (flo * fhi <= 0) {
+        for (let i = 0; i < 200; i++){
+          const mid = (lo + hi) / 2, fm = npv(mid);
+          if (Math.abs(fm) < 1e-6) { rate = mid; break; }
+          if ((flo < 0) === (fm < 0)) { lo = mid; flo = fm; } else { hi = mid; fhi = fm; }
+          rate = mid;
+        }
+      }
+    }
+    if (!isFinite(rate) || rate < -0.999999) return null;
+    return rate;
+  }
+
+  function computeFundCashflows(fund, includeTerminal){
+    const txs = (fund.transactions || []).filter(t => t.date && t.amount);
+    const flows = txs.map(t => ({
+      date: new Date(t.date + 'T00:00:00'),
+      amount: t.type === 'sell' ? Math.abs(t.amount) : -Math.abs(t.amount)
+    }));
+    if (includeTerminal){
+      const units = mfUnits(fund);
+      const curVal = units * (fund.currentNav || 0);
+      if (units > 0.0001 && curVal > 0){
+        flows.push({ date: new Date(), amount: curVal });
+      }
+    }
+    return flows.sort((a,b) => a.date - b.date);
+  }
+
+  function computeFundXIRR(fund){
+    return xirr(computeFundCashflows(fund, true));
+  }
+
+  function computePortfolioXIRR(){
+    let all = [];
+    (state.mutualFunds || []).forEach(f => { all = all.concat(computeFundCashflows(f, false)); });
+    const totalCurrent = (state.mutualFunds || []).reduce((s,f) => s + mfCurrentValue(f), 0);
+    if (totalCurrent > 0) all.push({ date: new Date(), amount: totalCurrent });
+    return xirr(all);
+  }
+
+  // Free, keyless NAV lookup via mfapi.in (AMFI mirror). No quota limits, so
+  // this refreshes directly rather than cascading through paid engines.
+  async function fetchMfNavBySchemeCode(code, bypassCache){
+    try {
+      const res = await fetchWithTimeout(`https://api.mfapi.in/mf/${encodeURIComponent(code)}/latest`, 6000, bypassCache);
+      if (!res.ok) return null;
+      const json = await res.json();
+      const rec = Array.isArray(json?.data) ? json.data[0] : null;
+      if (rec && rec.nav){
+        return { nav: parseFloat(rec.nav), date: mfDateToISO(rec.date) };
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  async function refreshAllMfNav(force){
+    const today = todayISO();
+    if (!state.mutualFunds || !state.mutualFunds.length){
+      toast('No mutual funds added yet.');
+      return;
+    }
+    if (!state.mfCache) state.mfCache = { lastSyncDate: null, funds: {} };
+    if (!state.mfCache.funds) state.mfCache.funds = {};
+
+    if (!force && state.mfCache.lastSyncDate === today && Object.keys(state.mfCache.funds).length){
+      state.mutualFunds.forEach(f => {
+        const c = f.schemeCode ? state.mfCache.funds[f.schemeCode.trim()] : null;
+        if (c?.nav){ f.currentNav = c.nav; f.currentNavDate = c.date; }
+      });
+      renderMutualFunds();
+      if ($('mfStatus')) $('mfStatus').textContent = `✓ Using today's cached NAV (${today}).`;
+      return;
+    }
+
+    const withCodes = state.mutualFunds.filter(f => f.schemeCode && f.schemeCode.trim());
+    if (!withCodes.length){
+      if ($('mfStatus')) $('mfStatus').textContent = 'No AMFI scheme codes set — add one to enable auto NAV updates.';
+      renderMutualFunds();
+      return;
+    }
+
+    let done = 0;
+    for (const f of withCodes){
+      if ($('mfStatus')) $('mfStatus').textContent = `Fetching live NAV (${done + 1}/${withCodes.length})...`;
+      const code = f.schemeCode.trim();
+      const rec = await fetchMfNavBySchemeCode(code, force);
+      if (rec){
+        f.currentNav = rec.nav;
+        f.currentNavDate = rec.date;
+        state.mfCache.funds[code] = { nav: rec.nav, date: rec.date, fetchedAt: new Date().toISOString() };
+      }
+      done++;
+      await sleep(250);
+    }
+    state.mfCache.lastSyncDate = today;
+    markDirty();
+    if (fileHandle) await writeToHandle();
+    renderMutualFunds();
+    if ($('mfStatus')) $('mfStatus').textContent = `✓ NAV updated as of ${today}.`;
+    toast('Mutual fund NAVs refreshed.');
+  }
+
+  async function searchMfScheme(){
+    const q = $('mfSearchQuery').value.trim();
+    const box = $('mfSearchResults');
+    if (!q){ toast('Enter part of the scheme name to search.'); return; }
+    box.style.display = 'block';
+    box.innerHTML = '<div class="mf-search-row"><span style="color:var(--muted);">Searching AMFI database...</span></div>';
+    try {
+      const res = await fetchWithTimeout(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(q)}`, 7000, true);
+      if (!res.ok) throw new Error('bad response');
+      const list = await res.json();
+      if (!Array.isArray(list) || !list.length){
+        box.innerHTML = '<div class="mf-search-row"><span style="color:var(--muted);">No matching schemes. Try a shorter or different name.</span></div>';
+        return;
+      }
+      box.innerHTML = '';
+      list.slice(0, 20).forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'mf-search-row';
+        row.innerHTML = `<span>${escapeHtml(item.schemeName)}</span><button class="small ghost" type="button" style="flex-shrink:0;">Use</button>`;
+        row.querySelector('button').addEventListener('click', () => {
+          $('mfSchemeCode').value = item.schemeCode;
+          $('mfSchemeName').value = item.schemeName;
+          box.style.display = 'none';
+          box.innerHTML = '';
+          toast('Scheme selected — NAV will auto-fetch after saving.');
+        });
+        box.appendChild(row);
+      });
+    } catch(e){
+      box.innerHTML = '<div class="mf-search-row"><span style="color:var(--muted);">Search failed. Enter the AMFI code manually instead.</span></div>';
+    }
+  }
+  $('btnMfSearch').addEventListener('click', searchMfScheme);
+
+  function resetMfForm(){
+    editingMfId = null;
+    $('mfFormTitle').textContent = 'Add Mutual Fund (IN)';
+    $('btnAddMf').textContent = 'Add Mutual Fund';
+    $('btnCancelEditMf').style.display = 'none';
+    $('mfSchemeName').value = ''; $('mfSchemeCode').value = ''; $('mfFolio').value = '';
+    $('mfCategory').value = 'Equity'; $('mfNote').value = '';
+    $('mfDate').value = todayISO(); $('mfTxType').value = 'buy';
+    $('mfAmount').value = ''; $('mfTxNav').value = ''; $('mfCurrentNav').value = '';
+    $('mfSearchQuery').value = ''; $('mfSearchResults').style.display = 'none'; $('mfSearchResults').innerHTML = '';
+  }
+  $('btnCancelEditMf').addEventListener('click', resetMfForm);
+
+  $('btnAddMf').addEventListener('click', async () => {
+    const schemeName = $('mfSchemeName').value.trim();
+    const schemeCode = $('mfSchemeCode').value.trim();
+    const folio = $('mfFolio').value.trim();
+    const category = $('mfCategory').value;
+    const note = $('mfNote').value.trim();
+
+    if (!schemeName){ toast('Enter the mutual fund scheme name.'); return; }
+
+    if (editingMfId){
+      const f = state.mutualFunds.find(x => x.id === editingMfId);
+      if (f){
+        f.schemeName = schemeName; f.schemeCode = schemeCode; f.folio = folio;
+        f.category = category; f.note = note;
+        const manualNav = parseFloat($('mfCurrentNav').value);
+        if (!isNaN(manualNav) && manualNav > 0) { f.currentNav = manualNav; f.currentNavDate = todayISO(); }
+      }
+      toast('Mutual fund updated.');
+      resetMfForm();
+      markDirty(); renderMutualFunds();
+      return;
+    }
+
+    const date = $('mfDate').value || todayISO();
+    const type = $('mfTxType').value === 'sell' ? 'sell' : 'buy';
+    const amount = parseFloat($('mfAmount').value) || 0;
+    const nav = parseFloat($('mfTxNav').value) || 0;
+    const manualCurrentNav = parseFloat($('mfCurrentNav').value) || 0;
+
+    if (!amount || amount <= 0 || !nav || nav <= 0){
+      toast('Enter a valid transaction amount and NAV to compute units.');
+      return;
+    }
+
+    const units = amount / nav;
+    const fund = {
+      id: uid(), schemeName, schemeCode, folio, category, note,
+      currentNav: manualCurrentNav > 0 ? manualCurrentNav : nav,
+      currentNavDate: manualCurrentNav > 0 ? todayISO() : date,
+      transactions: [{ id: uid(), date, type, amount, nav, units }]
+    };
+    state.mutualFunds.push(fund);
+    toast('Mutual fund added.');
+    resetMfForm();
+    markDirty(); renderMutualFunds();
+
+    if (schemeCode && manualCurrentNav <= 0){
+      const rec = await fetchMfNavBySchemeCode(schemeCode, false);
+      if (rec){
+        fund.currentNav = rec.nav; fund.currentNavDate = rec.date;
+        if (!state.mfCache) state.mfCache = { lastSyncDate: null, funds: {} };
+        if (!state.mfCache.funds) state.mfCache.funds = {};
+        state.mfCache.funds[schemeCode] = { nav: rec.nav, date: rec.date, fetchedAt: new Date().toISOString() };
+        markDirty(); renderMutualFunds();
+      }
+    }
+  });
+
+  function renderMutualFunds(){
+    const container = $('mfContainer');
+    if (!container) return;
+    if (!state.mutualFunds || !state.mutualFunds.length){
+      container.innerHTML = ''; $('mfEmpty').style.display = 'block';
+      $('mfTotalInvested').textContent = '₹0.00';
+      $('mfTotalValue').textContent = '₹0.00';
+      $('mfTotalGain').textContent = '₹0.00';
+      $('mfTotalXirr').textContent = '--';
+      return;
+    }
+    $('mfEmpty').style.display = 'none';
+
+    let totalInvested = 0, totalValue = 0;
+    container.innerHTML = '';
+    state.mutualFunds.forEach(f => {
+      const units = mfUnits(f);
+      const invested = mfInvested(f);
+      const curValue = mfCurrentValue(f);
+      const gain = curValue - invested;
+      const gainPct = invested > 0 ? (gain / invested) * 100 : 0;
+      const fundXirr = computeFundXIRR(f);
+      totalInvested += invested;
+      totalValue += curValue;
+
+      const card = document.createElement('div');
+      card.className = 'policy-card';
+      const badgeClass = gain >= 0 ? 'mf-badge-gain' : 'mf-badge-loss';
+      const gainColor = gain >= 0 ? 'var(--income)' : 'var(--expense)';
+      const isOpen = expandedMfIds.has(f.id);
+      const txRows = (f.transactions || []).slice().sort((a,b) => new Date(a.date) - new Date(b.date)).map(t => `
+        <tr>
+          <td>${t.date}</td>
+          <td>${t.type === 'sell' ? 'Sell' : 'Buy'}</td>
+          <td style="text-align:right;">₹${fmt(t.amount)}</td>
+          <td style="text-align:right;">₹${fmt(t.nav)}</td>
+          <td style="text-align:right;">${(t.units||0).toFixed(3)}</td>
+          <td class="actions-cell"><button class="small ghost danger" data-mftxdel="${f.id}|${t.id}">Del</button></td>
+        </tr>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="policy-header">
+          <div>
+            <div class="policy-title">${escapeHtml(f.schemeName)}</div>
+            <div class="policy-meta">${escapeHtml(f.category)} ${f.folio ? '&middot; Folio ' + escapeHtml(f.folio) : ''} ${f.schemeCode ? '&middot; AMFI ' + escapeHtml(f.schemeCode) : ''}</div>
+          </div>
+          <span class="policy-badge ${badgeClass}">XIRR ${fundXirr === null ? 'N/A' : (fundXirr * 100).toFixed(2) + '%'}</span>
+        </div>
+        <div class="policy-stats">
+          <div><div class="policy-stat-lbl">Units Held</div><div class="policy-stat-val">${units.toFixed(3)}</div></div>
+          <div><div class="policy-stat-lbl">Invested</div><div class="policy-stat-val">₹${fmt(invested)}</div></div>
+          <div><div class="policy-stat-lbl">Current NAV</div><div class="policy-stat-val">₹${fmt(f.currentNav)}${f.currentNavDate ? '<br><span style="font-size:10px;color:var(--muted);font-weight:400;">as of ' + f.currentNavDate + '</span>' : ''}</div></div>
+          <div><div class="policy-stat-lbl">Current Value (Remaining)</div><div class="policy-stat-val" style="color:${gainColor};">₹${fmt(curValue)}</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;">
+          <div style="font-size:12.5px;color:${gainColor};font-family:'JetBrains Mono',monospace;">
+            ${gain >= 0 ? '+' : ''}₹${fmt(gain)} (${gain >= 0 ? '+' : ''}${gainPct.toFixed(2)}%) ${f.note ? '&middot; ' + escapeHtml(f.note) : ''}
+          </div>
+          <div>
+            <button class="small ghost" data-mftoggle="${f.id}">${isOpen ? 'Hide' : 'Transactions'} (${(f.transactions||[]).length})</button>
+            <button class="small ghost" data-mfedit="${f.id}">Edit</button>
+            <button class="small ghost danger" data-mfdel="${f.id}">Delete</button>
+          </div>
+        </div>
+        <div class="mf-tx-panel" style="display:${isOpen ? 'block' : 'none'};">
+          <div class="mf-tx-add">
+            <div><label>Date</label><input type="date" data-mftxdate value="${todayISO()}"></div>
+            <div><label>Type</label>
+              <select data-mftxtype>
+                <option value="buy">Buy / SIP</option>
+                <option value="sell">Sell</option>
+              </select>
+            </div>
+            <div><label>Amount (₹)</label><input type="number" data-mftxamount step="0.01" min="0" placeholder="5000"></div>
+            <div><label>NAV (₹)</label><input type="number" data-mftxnav step="0.0001" min="0" placeholder="65.234"></div>
+            <div><button class="small primary" data-mfaddtx="${f.id}" type="button" style="width:100%;">+ Add</button></div>
+          </div>
+          <div class="mf-tx-table-wrap table-responsive">
+            <table>
+              <thead><tr><th>Date</th><th>Type</th><th style="text-align:right;">Amount</th><th style="text-align:right;">NAV</th><th style="text-align:right;">Units</th><th></th></tr></thead>
+              <tbody>${txRows || '<tr><td colspan="6" style="text-align:center;color:var(--muted);">No transactions yet.</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    const totalGain = totalValue - totalInvested;
+    const totalGainPct = totalInvested > 0 ? (totalGain / totalInvested) * 100 : 0;
+    const portfolioXirr = computePortfolioXIRR();
+    $('mfTotalInvested').textContent = `₹${fmt(totalInvested)}`;
+    $('mfTotalValue').textContent = `₹${fmt(totalValue)}`;
+    $('mfTotalGain').textContent = `${totalGain >= 0 ? '+' : ''}₹${fmt(totalGain)} (${totalGain >= 0 ? '+' : ''}${totalGainPct.toFixed(2)}%)`;
+    $('mfTotalGain').style.color = totalGain >= 0 ? 'var(--income)' : 'var(--expense)';
+    $('mfTotalXirr').textContent = portfolioXirr === null ? 'N/A' : (portfolioXirr * 100).toFixed(2) + '%';
+
+    container.querySelectorAll('[data-mftoggle]').forEach(b => b.addEventListener('click', () => {
+      const id = b.dataset.mftoggle;
+      if (expandedMfIds.has(id)) expandedMfIds.delete(id); else expandedMfIds.add(id);
+      renderMutualFunds();
+    }));
+
+    container.querySelectorAll('[data-mfdel]').forEach(b => b.addEventListener('click', () => {
+      if (!confirm('Delete this mutual fund and all its transactions?')) return;
+      state.mutualFunds = state.mutualFunds.filter(f => f.id !== b.dataset.mfdel);
+      markDirty(); renderMutualFunds(); toast('Mutual fund deleted.');
+    }));
+
+    container.querySelectorAll('[data-mfedit]').forEach(b => b.addEventListener('click', () => {
+      const f = state.mutualFunds.find(x => x.id === b.dataset.mfedit);
+      if (!f) return;
+      editingMfId = f.id;
+      $('mfFormTitle').textContent = 'Edit Mutual Fund';
+      $('btnAddMf').textContent = 'Save Changes';
+      $('btnCancelEditMf').style.display = 'inline-block';
+      $('mfSchemeName').value = f.schemeName; $('mfSchemeCode').value = f.schemeCode; $('mfFolio').value = f.folio;
+      $('mfCategory').value = f.category; $('mfNote').value = f.note; $('mfCurrentNav').value = f.currentNav || '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+
+    container.querySelectorAll('[data-mfaddtx]').forEach(b => b.addEventListener('click', () => {
+      const fid = b.dataset.mfaddtx;
+      const f = state.mutualFunds.find(x => x.id === fid);
+      if (!f) return;
+      const panel = b.closest('.mf-tx-panel');
+      const date = panel.querySelector('[data-mftxdate]').value || todayISO();
+      const type = panel.querySelector('[data-mftxtype]').value === 'sell' ? 'sell' : 'buy';
+      const amount = parseFloat(panel.querySelector('[data-mftxamount]').value) || 0;
+      const nav = parseFloat(panel.querySelector('[data-mftxnav]').value) || 0;
+      if (!amount || amount <= 0 || !nav || nav <= 0){ toast('Enter a valid amount and NAV.'); return; }
+      const units = amount / nav;
+      f.transactions.push({ id: uid(), date, type, amount, nav, units });
+      expandedMfIds.add(fid);
+      markDirty(); renderMutualFunds(); toast('Transaction added.');
+    }));
+
+    container.querySelectorAll('[data-mftxdel]').forEach(b => b.addEventListener('click', () => {
+      const [fid, txid] = b.dataset.mftxdel.split('|');
+      const f = state.mutualFunds.find(x => x.id === fid);
+      if (!f) return;
+      f.transactions = f.transactions.filter(t => t.id !== txid);
+      markDirty(); renderMutualFunds(); toast('Transaction removed.');
+    }));
+  }
+
+  $('btnRefreshMfNav').addEventListener('click', () => refreshAllMfNav(true));
+
   function renderAll(){
     renderSummary();
     renderLedgerTable();
@@ -5174,6 +5780,7 @@
     renderFixedDeposits();
     renderGoals();
     renderStocks();
+    renderMutualFunds();
     renderPolicies();
     renderInsights();
     updateStatusPills();
