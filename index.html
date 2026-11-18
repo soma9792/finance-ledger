@@ -1576,8 +1576,43 @@
     45%  { transform: rotateY(360deg); }
     100% { transform: rotateY(360deg); }
   }
-</style>
-</head>
+  /* ===================== COMPACT DESKTOP LAYOUT ===================== */
+  /* Tighter spacing and wider content so more fits on screen. Mobile view untouched. */
+  body:not(.view-mobile) .wrap { max-width: 1600px; padding: 12px 14px 48px; }
+  body:not(.view-mobile) header { padding-bottom: 10px; margin-bottom: 12px; gap: 10px; }
+  body:not(.view-mobile) h1 { font-size: 24px; }
+  body:not(.view-mobile) .subtitle { font-size: 11.5px; }
+  body:not(.view-mobile) .filehdr { gap: 6px; }
+  body:not(.view-mobile) .status-pill { height: 26px; }
+  body:not(.view-mobile) .summary { gap: 8px; margin-bottom: 12px; }
+  body:not(.view-mobile) .sum-cell { padding: 10px 12px; }
+  body:not(.view-mobile) .sum-label { margin-bottom: 4px; font-size: 10.5px; }
+  body:not(.view-mobile) .sum-val { font-size: 18px; }
+  body:not(.view-mobile) .grid2 { grid-template-columns: 340px 1fr; gap: 12px; }
+  body:not(.view-mobile) .dash-grid { gap: 12px; margin-bottom: 12px; }
+  body:not(.view-mobile) .panel { padding: 12px 14px; margin-bottom: 12px; }
+  body:not(.view-mobile) .panel h3 { font-size: 16px; margin: 0 0 10px; padding-bottom: 8px; }
+  body:not(.view-mobile) label { margin-top: 8px; margin-bottom: 4px; }
+  body:not(.view-mobile) input,
+  body:not(.view-mobile) select { padding: 6px 9px; font-size: 13px; }
+  body:not(.view-mobile) .type-toggle { margin-top: 8px; }
+  body:not(.view-mobile) .type-toggle button { padding: 6px; }
+  body:not(.view-mobile) .tabs button { padding: 4px 8px; }
+  body:not(.view-mobile) table { font-size: 12.5px; }
+  body:not(.view-mobile) th { padding: 6px 8px; }
+  body:not(.view-mobile) td { padding: 6px 8px; }
+  body:not(.view-mobile) .cards-grid { gap: 10px; margin-top: 8px; }
+  body:not(.view-mobile) .cards-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  @media(max-width: 1120px) {
+    body:not(.view-mobile) .grid2 { grid-template-columns: 1fr; }
+  }
+  /* Smaller avatar so the portal starts higher on the page (desktop only) */
+  body:not(.view-mobile) .creator-avatar-wrap { padding: 0; }
+  body:not(.view-mobile) .creator-avatar-img { width: 56px; height: 56px; border-width: 2px; }
+  /* API status pills now live inside the 3-dot menu */
+  .api-menu-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 12px 8px; }
+  .api-menu-list .status-pill { height: 24px; font-size: 10.5px; }
+</style></head>
 <body>
 
 <div id="gate" class="gate" style="display:none;">
@@ -1668,11 +1703,6 @@
     
     <div class="filehdr">
       <div class="status-cluster">
-        <span class="status-pill" id="headerFhPill"><span class="dot" id="headerFhDot"></span>Finnhub</span>
-        <span class="status-pill" id="headerAvPill"><span class="dot" id="headerAvDot"></span>Alpha Vantage</span>
-        <span class="status-pill" id="headerTgPill"><span class="dot" id="headerTgDot"></span>Tiingo</span>
-        <span class="status-pill" id="headerMxPill"><span class="dot" id="headerMxDot"></span>Marketaux</span>
-        <span class="status-pill" id="headerConnPill"><span class="dot" id="connDot"></span><b id="connLabel">Not connected</b></span>
         <button class="primary" id="btnEmergencyRefresh" title="Bypass daily cache restriction and force full API refresh">⚡ Force Live Refresh</button>
       </div>
 
@@ -1694,6 +1724,14 @@
           </button>
 
           <div class="kebab-dropdown" id="kebabMenu">
+            <div class="kebab-header-section">🔌 Connected APIs</div>
+            <div class="api-menu-list">
+              <span class="status-pill" id="headerFhPill"><span class="dot" id="headerFhDot"></span>Finnhub</span>
+              <span class="status-pill" id="headerAvPill"><span class="dot" id="headerAvDot"></span>Alpha Vantage</span>
+              <span class="status-pill" id="headerTgPill"><span class="dot" id="headerTgDot"></span>Tiingo</span>
+              <span class="status-pill" id="headerMxPill"><span class="dot" id="headerMxDot"></span>Marketaux</span>
+              <span class="status-pill" id="headerConnPill"><span class="dot" id="connDot"></span><b id="connLabel">Not connected</b></span>
+            </div>
             <div class="kebab-header-section">⚡ Engine Telemetry</div>
             <button class="kebab-item" id="kebabEngineStatus" type="button">
               <span>Telemetry Status</span>
@@ -4529,6 +4567,7 @@
     applyTaskbarVisibility();
     switchPage('dashboard');
     renderAll();
+    setPeriod('month'); // Ledger opens on the current month instead of today only
     updateStatusPills();
     setTimeout(async () => {
       const fx = await fetchLiveCurrencyRates(false);
@@ -4558,15 +4597,23 @@
     if (parsed && parsed.encrypted) {
       let pass = await promptPassword("Unlock Encrypted JSON");
       if (!pass) return false;
+      let decrypted;
       try {
-        const decrypted = await decryptData(parsed, pass);
-        state = normalizeState(decrypted);
-        currentPassword = pass;
-        return true;
+        decrypted = await decryptData(parsed, pass);
       } catch(e) {
+        console.error('Decrypt failed:', e);
         toast('Incorrect password! Unable to decrypt.');
         return false;
       }
+      try {
+        state = normalizeState(decrypted);
+      } catch(e) {
+        console.error('Data load failed after decrypt:', e);
+        toast('Password OK, but data could not be loaded: ' + (e && e.message ? e.message : e));
+        return false;
+      }
+      currentPassword = pass;
+      return true;
     } else {
       state = normalizeState(parsed);
       currentPassword = await promptPassword("Set Password for Unencrypted File", true);
@@ -4591,7 +4638,13 @@
         enterApp();
         toast('Encrypted JSON opened successfully.');
       }
-    }catch(e){}
+    }catch(e){
+      if (e && e.name === 'AbortError') return; // user closed the file picker
+      console.error('Open existing failed:', e);
+      // Browser/company policy can block the File System Access picker; fall back to the plain file input.
+      toast('Direct file open is blocked in this browser (' + (e && e.name ? e.name : 'error') + '). Opening via Import instead — use Export .json to save changes.');
+      $('fileInputImport').click();
+    }
   });
 
   $('btnCreateNew').addEventListener('click', async () => {
@@ -4626,7 +4679,7 @@
         if ($('app').style.display === 'none') enterApp(); else { applyTaskbarVisibility(); renderAll(); }
         toast('Data imported & decrypted successfully.');
       }
-    }catch(err){ toast('File load failed.'); }
+    }catch(err){ console.error('Import failed:', err); toast('File load failed: ' + (err && err.message ? err.message : err)); }
     e.target.value = '';
   });
 
