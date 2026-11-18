@@ -6804,7 +6804,27 @@
         ${reserveCell('Reserve now', fmt(s.reserveNow), 'hero', '')}
         ${reserveCell('Free to spend', fmt(s.safe), s.safe < 0 ? 'danger' : 'good', '')}
         ${reserveCell(`${escapeHtml(monthLabel(s.monthVal))} committed`, fmt(s.recurringMonthTotal), 'invest', '')}
+        ${reserveCell('Giving credit (total)', fmt(givingCreditTotal()), 'warn', '')}
+        ${reserveCell('Borrow (outstanding)', fmt(borrowOutstandingTotal()), 'good', '')}
       </div>`;
+  }
+
+  // Borrowed money still owed: all borrow entries, minus ones ticked as repaid,
+  // minus manual "Borrow Repayment" expenses not already linked to a borrow entry
+  // (linked ones are created by the tick button and are covered by the repaid flag).
+  function borrowOutstandingTotal(){
+    const bt = borrowTracker();
+    const manualRepaid = state.transactions
+      .filter(t => t.type === 'expense' && (t.category || '').trim().toLowerCase() === 'borrow repayment' && !t.borrowSourceId)
+      .reduce((a, t) => a + (Number(t.amount) || 0), 0);
+    return Math.max(0, bt.outstandingTotal - manualRepaid);
+  }
+
+  // Total of every expense entry in the "Giving credit" category (all time)
+  function givingCreditTotal(){
+    return state.transactions
+      .filter(t => t.type === 'expense' && (t.category || '').trim().toLowerCase() === 'giving credit')
+      .reduce((a, t) => a + (Number(t.amount) || 0), 0);
   }
 
   function syncPlannerControls(){
